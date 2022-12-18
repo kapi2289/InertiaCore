@@ -10,6 +10,8 @@
         <PackageProjectUrl>https://github.com/kapi2289/InertiaCore</PackageProjectUrl>
         <RepositoryUrl>https://github.com/kapi2289/InertiaCore</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>Inertia,Inertiajs,ASPNET,Vue</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
@@ -19,4 +21,8 @@
         <PackageReference Include="TypeMerger" Version="2.1.1"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="LICENSE" Pack="true" PackagePath=""/>
+        <None Include="README.md" Pack="true" PackagePath=""/>
+    </ItemGroup>
 </Project>
