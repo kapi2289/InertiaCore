@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Version>0.0.1</Version>
+        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+        <PackageId>AspNetCore.InertiaCore</PackageId>
+        <Authors>kapi2289</Authors>
+        <Description>Inertia.js ASP.NET Adapter. https://inertiajs.com/</Description>
+        <PackageProjectUrl>https://github.com/kapi2289/InertiaCore</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/kapi2289/InertiaCore</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>Inertia,Inertiajs,ASPNET,Vue</PackageTags>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.App" Version="2.2.8"/>
+        <PackageReference Include="TypeMerger" Version="2.1.1"/>
+    </ItemGroup>
+
+</Project>
