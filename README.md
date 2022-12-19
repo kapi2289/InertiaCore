@@ -12,10 +12,11 @@ and its usage is more similar to the official adapters'.
 
 ## What was added
 
-- [x] Cycle-safe model relations data serialization.
 - [x] Validation error handling.
 - [x] Better shared data integration.
 - [x] Props and shared props are merged instead of being separated.
+- [x] Server-side rendering support.
+- [x] Cycle-safe model with relations data serialization.
 - [x] Fixed **PATCH**, **PUT**, **DELETE** redirection not working properly.
 
 ## Installation
@@ -32,8 +33,6 @@ using InertiaCore.Extensions;
 
 [...]
 
-builder.Services.AddControllersWithViews()
-    .AddInertiaOptions(); // Configure MVC options
 builder.Services.AddInertia();
 
 [...]

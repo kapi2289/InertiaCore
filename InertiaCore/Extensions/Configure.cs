@@ -2,6 +2,7 @@ using System.Net;
 using InertiaCore.Ssr;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -35,19 +36,13 @@ public static class Configure
     {
         services.AddSingleton<IResponseFactory, ResponseFactory>();
         services.AddSingleton<IGateway, Gateway>();
-
         services.AddHttpClient();
+
+        services.Configure<MvcOptions>(mvcOptions => { mvcOptions.Filters.Add<InertiaActionFilter>(); });
 
         if (options != null) services.Configure(options);
 
         return services;
-    }
-
-    public static IMvcBuilder AddInertiaOptions(this IMvcBuilder builder)
-    {
-        builder.AddMvcOptions(options => { options.Filters.Add<InertiaActionFilter>(); });
-
-        return builder;
     }
 
     private static async Task OnVersionChange(HttpContext context, IApplicationBuilder app)
