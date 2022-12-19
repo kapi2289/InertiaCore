@@ -1,6 +1,6 @@
 # Inertia.js ASP.NET Adapter
 
-[![NuGet](https://img.shields.io/nuget/v/AspNetCore.InertiaCore?style=flat-square)](https://www.nuget.org/packages/AspNetCore.InertiaCore)
+[![NuGet](https://img.shields.io/nuget/v/AspNetCore.InertiaCore?style=flat-square&color=blue)](https://www.nuget.org/packages/AspNetCore.InertiaCore)
 [![NuGet](https://img.shields.io/nuget/dt/AspNetCore.InertiaCore?style=flat-square)](https://www.nuget.org/packages/AspNetCore.InertiaCore)
 [![License](https://img.shields.io/github/license/kapi2289/InertiaCore?style=flat-square)](https://github.com/kapi2289/InertiaCore/blob/main/LICENSE)
 
@@ -57,7 +57,7 @@ Create a file `/Views/App.cshtml`.
     <title inertia>My App</title>
 </head>
 <body>
-@Inertia.Html(Model)
+@await Inertia.Html(Model)
 
 <script src="/js/app.js"></script>
 </body>
@@ -141,4 +141,37 @@ app.Use(async (context, next) =>
         }
     });
 });
+```
+
+### Server-side rendering
+
+If you want to enable SSR in your Inertia app, remember to add `Inertia.Head()` to your layout
+
+```html
+@using InertiaCore
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title inertia>My App</title>
+    
+    @await Inertia.Head(Model)
+</head>
+<body>
+@await Inertia.Html(Model)
+
+<script src="/js/app.js"></script>
+</body>
+</html>
+```
+
+and enable the SSR option in the `Program.cs`/`Startup.cs` file.
+
+```csharp
+app.UseInertia();
+Inertia.EnableSsr();
+
+// You can optionally pass a different URL in the parameter
+Inertia.EnableSsr("http://127.0.0.1:13714/render");
 ```

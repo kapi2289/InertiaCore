@@ -1,4 +1,5 @@
 using System.Net;
+using InertiaCore.Ssr;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -32,6 +33,9 @@ public static class Configure
     public static IServiceCollection AddInertia(this IServiceCollection services)
     {
         services.AddSingleton<IResponseFactory, ResponseFactory>();
+        services.AddSingleton<IGateway, Gateway>();
+
+        services.AddHttpClient();
 
         return services;
     }

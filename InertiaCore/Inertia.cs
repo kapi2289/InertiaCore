@@ -10,7 +10,9 @@ public static class Inertia
 
     public static Response Render(string component, object? props = null) => _factory.Render(component, props);
 
-    public static IHtmlContent Html(dynamic model) => _factory.Html(model);
+    public static Task<IHtmlContent> Head(dynamic model) => _factory.Head(model);
+
+    public static Task<IHtmlContent> Html(dynamic model) => _factory.Html(model);
 
     public static void SetRootView(string rootView) => _factory.SetRootView(rootView);
 
@@ -23,4 +25,6 @@ public static class Inertia
     public static void Share(string key, object? value) => _factory.Share(key, value);
 
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
+
+    public static void EnableSsr(string? url = null) => _factory.EnableSsr(url);
 }
