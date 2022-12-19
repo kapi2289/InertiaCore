@@ -30,12 +30,15 @@ public static class Configure
         return app;
     }
 
-    public static IServiceCollection AddInertia(this IServiceCollection services)
+    public static IServiceCollection AddInertia(this IServiceCollection services,
+        Action<InertiaOptions>? options = null)
     {
         services.AddSingleton<IResponseFactory, ResponseFactory>();
         services.AddSingleton<IGateway, Gateway>();
 
         services.AddHttpClient();
+
+        if (options != null) services.Configure(options);
 
         return services;
     }

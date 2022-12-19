@@ -64,14 +64,14 @@ Create a file `/Views/App.cshtml`.
 </html>
 ```
 
-You can change the root view file using
+You can change the root view file using:
 
 ```csharp
-app.UseInertia();
-Inertia.SetRootView("~/Views/Main.cshtml");
+builder.Services.AddInertia(options =>
+{
+    options.RootView = "~/Views/Main.cshtml";
+});
 ```
-
-in your `Program.cs` or `Startup.cs` file.
 
 ### Backend
 
@@ -115,7 +115,7 @@ JSON.
 
 ### Shared data
 
-You can add some shared data to your views using for example middlewares.
+You can add some shared data to your views using for example middlewares:
 
 ```csharp
 using InertiaCore;
@@ -145,7 +145,7 @@ app.Use(async (context, next) =>
 
 ### Server-side rendering
 
-If you want to enable SSR in your Inertia app, remember to add `Inertia.Head()` to your layout
+If you want to enable SSR in your Inertia app, remember to add `Inertia.Head()` to your layout:
 
 ```html
 @using InertiaCore
@@ -166,12 +166,14 @@ If you want to enable SSR in your Inertia app, remember to add `Inertia.Head()` 
 </html>
 ```
 
-and enable the SSR option in the `Program.cs`/`Startup.cs` file.
+and enable the SSR option:
 
 ```csharp
-app.UseInertia();
-Inertia.EnableSsr();
-
-// You can optionally pass a different URL in the parameter
-Inertia.EnableSsr("http://127.0.0.1:13714/render");
+builder.Services.AddInertia(options =>
+{
+    options.SsrEnabled = true;
+    
+    // You can optionally set a different URL than the default.
+    options.SsrUrl = "http://127.0.0.1:13714/render"; // default
+});
 ```

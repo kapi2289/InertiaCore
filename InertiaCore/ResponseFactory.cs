@@ -1,9 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Web;
+using InertiaCore.Extensions;
 using InertiaCore.Ssr;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace InertiaCore;
 
@@ -12,44 +14,39 @@ internal interface IResponseFactory
     public Response Render(string component, object? props = null);
     public Task<IHtmlContent> Head(dynamic model);
     public Task<IHtmlContent> Html(dynamic model);
-    public void SetRootView(string rootView);
     public void Version(object? version);
     public string? GetVersion();
     public LocationResult Location(string url);
     public void Share(string key, object? value);
     public void Share(IDictionary<string, object?> data);
-    public void EnableSsr(string? url = null);
 }
 
 internal class ResponseFactory : IResponseFactory
 {
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly IGateway _gateway;
+    private readonly IOptions<InertiaOptions> _options;
 
-    private string _rootView = "~/Views/App.cshtml";
     private object? _version;
 
-    private bool _ssrEnabled;
-    private string _ssrUrl = "http://127.0.0.1:13714/render";
-
-    public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway) =>
-        (_contextAccessor, _gateway) = (contextAccessor, gateway);
+    public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
+        (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
 
     public Response Render(string component, object? props = null)
     {
         props ??= new { };
 
-        return new Response(component, props, _rootView, GetVersion());
+        return new Response(component, props, _options.Value.RootView, GetVersion());
     }
 
     public async Task<IHtmlContent> Head(dynamic model)
     {
-        if (!_ssrEnabled) return new HtmlString("");
+        if (!_options.Value.SsrEnabled) return new HtmlString("");
 
         var context = _contextAccessor.HttpContext!;
 
         var response = context.Features.Get<SsrResponse>();
-        response ??= await _gateway.Dispatch(model, _ssrUrl);
+        response ??= await _gateway.Dispatch(model, _options.Value.SsrUrl);
 
         if (response == null) return new HtmlString("");
 
@@ -59,12 +56,12 @@ internal class ResponseFactory : IResponseFactory
 
     public async Task<IHtmlContent> Html(dynamic model)
     {
-        if (_ssrEnabled)
+        if (_options.Value.SsrEnabled)
         {
             var context = _contextAccessor.HttpContext!;
 
             var response = context.Features.Get<SsrResponse>();
-            response ??= await _gateway.Dispatch(model, _ssrUrl);
+            response ??= await _gateway.Dispatch(model, _options.Value.SsrUrl);
 
             if (response != null)
             {
@@ -84,8 +81,6 @@ internal class ResponseFactory : IResponseFactory
 
         return new HtmlString($"<div id=\"app\" data-page=\"{encoded}\"></div>");
     }
-
-    public void SetRootView(string rootView) => _rootView = rootView;
 
     public void Version(object? version) => _version = version;
 
@@ -118,12 +113,5 @@ internal class ResponseFactory : IResponseFactory
         sharedData.Merge(data);
 
         context.Features.Set(sharedData);
-    }
-
-    public void EnableSsr(string? url)
-    {
-        _ssrEnabled = true;
-        if (url != null)
-            _ssrUrl = url;
     }
 }
