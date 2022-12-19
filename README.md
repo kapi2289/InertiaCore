@@ -126,13 +126,19 @@ app.Use(async (context, next) =>
 {
     var userId = context.Session.GetInt32("userId");
     
-    var sharedData = new InertiaSharedData
+    Inertia.Share("auth", new
     {
-        Data = new Dictionary<string, object?>
+        UserId = userId
+    });
+    
+    // Or
+    
+    Inertia.Share(new Dictionary<string, object?>
+    {
+        ["auth"] => new
         {
-            ["userId"] = userId
+            UserId = userId
         }
-    };
-    context.Features.Set(sharedData);
+    });
 });
 ```

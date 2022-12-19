@@ -19,4 +19,8 @@ public static class Inertia
     public static string? GetVersion() => _factory.GetVersion();
 
     public static LocationResult Location(string url) => _factory.Location(url);
+
+    public static void Share(string key, object? value) => _factory.Share(key, value);
+
+    public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
 }

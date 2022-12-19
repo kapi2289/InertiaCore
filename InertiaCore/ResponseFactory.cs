@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Web;
 using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Http;
 
 namespace InertiaCore;
 
@@ -13,13 +14,18 @@ internal interface IResponseFactory
     public void Version(object? version);
     public string? GetVersion();
     public LocationResult Location(string url);
+    public void Share(string key, object? value);
+    public void Share(IDictionary<string, object?> data);
 }
 
 internal class ResponseFactory : IResponseFactory
 {
-    private string _rootView = "~/Views/App.cshtml";
+    private readonly IHttpContextAccessor _contextAccessor;
 
+    private string _rootView = "~/Views/App.cshtml";
     private object? _version;
+
+    public ResponseFactory(IHttpContextAccessor contextAccessor) => _contextAccessor = contextAccessor;
 
     public Response Render(string component, object? props = null)
     {
@@ -54,4 +60,26 @@ internal class ResponseFactory : IResponseFactory
     };
 
     public LocationResult Location(string url) => new(url);
+
+    public void Share(string key, object? value)
+    {
+        var context = _contextAccessor.HttpContext!;
+
+        var sharedData = context.Features.Get<InertiaSharedData>();
+        sharedData ??= new InertiaSharedData();
+        sharedData.Set(key, value);
+
+        context.Features.Set(sharedData);
+    }
+
+    public void Share(IDictionary<string, object?> data)
+    {
+        var context = _contextAccessor.HttpContext!;
+
+        var sharedData = context.Features.Get<InertiaSharedData>();
+        sharedData ??= new InertiaSharedData();
+        sharedData.Merge(data);
+
+        context.Features.Set(sharedData);
+    }
 }

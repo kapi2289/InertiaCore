@@ -1,10 +1,10 @@
 namespace InertiaCore;
 
-public class InertiaSharedData
+internal class InertiaSharedData
 {
-    public IDictionary<string, object?>? Data { get; set; }
+    private IDictionary<string, object?>? Data { get; set; }
 
-    public Dictionary<string, object?> Merge(IDictionary<string, object?> with)
+    public Dictionary<string, object?> GetMerged(IDictionary<string, object?> with)
     {
         var result = new Dictionary<string, object?>();
 
@@ -15,5 +15,13 @@ public class InertiaSharedData
         foreach (var (key, value) in with) result[key] = value;
 
         return result;
+    }
+
+    public void Merge(IDictionary<string, object?> with) => Data = GetMerged(with);
+
+    public void Set(string key, object? value)
+    {
+        Data ??= new Dictionary<string, object?>();
+        Data[key] = value;
     }
 }

@@ -50,7 +50,7 @@ public class Response : IActionResult
 
         var shared = context.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
-            page.Props = shared.Merge(page.Props);
+            page.Props = shared.GetMerged(page.Props);
 
         var errors = GetErrors();
         if (errors != null)
