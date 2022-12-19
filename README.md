@@ -100,7 +100,10 @@ JSON.
             return await Index();
         }
         
-        return Inertia.Render("Posts", data);
+        _context.Add(post);
+        await _context.SaveChangesAsync();
+        
+        return RedirectToAction("Index");
     }
 ```
 
