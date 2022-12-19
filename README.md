@@ -1,5 +1,9 @@
 # Inertia.js ASP.NET Adapter
 
+[![NuGet](https://img.shields.io/nuget/v/AspNetCore.InertiaCore?style=flat-square)](https://www.nuget.org/packages/AspNetCore.InertiaCore)
+[![NuGet](https://img.shields.io/nuget/dt/AspNetCore.InertiaCore?style=flat-square)](https://www.nuget.org/packages/AspNetCore.InertiaCore)
+[![License](https://img.shields.io/github/license/kapi2289/InertiaCore?style=flat-square)](https://github.com/kapi2289/InertiaCore/blob/main/LICENSE)
+
 ## Attribution
 
 This library is heavily inspired
