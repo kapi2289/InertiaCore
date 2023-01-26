@@ -1,6 +1,6 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Web;
 using InertiaCore.Extensions;
 using InertiaCore.Ssr;
 using Microsoft.AspNetCore.Html;
@@ -77,7 +77,7 @@ internal class ResponseFactory : IResponseFactory
                 ReferenceHandler = ReferenceHandler.IgnoreCycles
             });
 
-        var encoded = HttpUtility.HtmlEncode(data);
+        var encoded =  WebUtility.HtmlEncode(data);
 
         return new HtmlString($"<div id=\"app\" data-page=\"{encoded}\"></div>");
     }
