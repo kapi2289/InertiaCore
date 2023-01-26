@@ -77,7 +77,7 @@ internal class ResponseFactory : IResponseFactory
                 ReferenceHandler = ReferenceHandler.IgnoreCycles
             });
 
-        var encoded =  WebUtility.HtmlEncode(data);
+        var encoded = WebUtility.HtmlEncode(data);
 
         return new HtmlString($"<div id=\"app\" data-page=\"{encoded}\"></div>");
     }
