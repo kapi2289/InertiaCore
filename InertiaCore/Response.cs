@@ -52,9 +52,7 @@ public class Response : IActionResult
         if (shared != null)
             page.Props = shared.GetMerged(page.Props);
 
-        var errors = GetErrors();
-        if (errors != null)
-            page.Props["errors"] = errors;
+        page.Props["errors"] = GetErrors();
 
         SetPage(page);
 
@@ -91,13 +89,13 @@ public class Response : IActionResult
 
     private IActionResult GetResult() => _context!.IsInertiaRequest() ? GetJson() : GetView();
 
-    private IDictionary<string, string>? GetErrors()
+    private IDictionary<string, string> GetErrors()
     {
         if (!_context!.ModelState.IsValid)
             return _context!.ModelState.ToDictionary(o => o.Key.ToCamelCase(),
                 o => o.Value?.Errors.FirstOrDefault()?.ErrorMessage ?? "");
 
-        return null;
+        return new Dictionary<string, string>(0);
     }
 
     private void SetContext(ActionContext context) => _context = context;
