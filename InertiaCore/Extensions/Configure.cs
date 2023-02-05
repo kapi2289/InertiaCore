@@ -34,9 +34,11 @@ public static class Configure
     public static IServiceCollection AddInertia(this IServiceCollection services,
         Action<InertiaOptions>? options = null)
     {
+        services.AddHttpContextAccessor();
+        services.AddHttpClient();
+
         services.AddSingleton<IResponseFactory, ResponseFactory>();
         services.AddSingleton<IGateway, Gateway>();
-        services.AddHttpClient();
 
         services.Configure<MvcOptions>(mvcOptions => { mvcOptions.Filters.Add<InertiaActionFilter>(); });
 
