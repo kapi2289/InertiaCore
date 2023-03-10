@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Html;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Html;
 
+[assembly: InternalsVisibleTo("InertiaCoreTests")]
 namespace InertiaCore;
 
 public static class Inertia
