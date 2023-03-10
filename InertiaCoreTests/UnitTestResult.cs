@@ -7,7 +7,6 @@ namespace InertiaCoreTests;
 public partial class Tests
 {
     [Test]
-    [Order(1)]
     [Description("Test if the JSON result is created correctly.")]
     public void TestJsonResult()
     {
@@ -45,7 +44,6 @@ public partial class Tests
     }
 
     [Test]
-    [Order(2)]
     [Description("Test if the view result is created correctly.")]
     public void TestViewResult()
     {
