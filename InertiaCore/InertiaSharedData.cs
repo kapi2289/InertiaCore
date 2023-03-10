@@ -1,3 +1,5 @@
+using InertiaCore.Extensions;
+
 namespace InertiaCore;
 
 internal class InertiaSharedData
@@ -10,7 +12,7 @@ internal class InertiaSharedData
 
         if (Data != null)
             foreach (var (key, value) in Data)
-                result[key] = value;
+                result[key.ToCamelCase()] = value;
 
         foreach (var (key, value) in with) result[key] = value;
 
@@ -22,6 +24,6 @@ internal class InertiaSharedData
     public void Set(string key, object? value)
     {
         Data ??= new Dictionary<string, object?>();
-        Data[key] = value;
+        Data[key.ToCamelCase()] = value;
     }
 }

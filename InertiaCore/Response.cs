@@ -24,7 +24,13 @@ public class Response : IActionResult
     public async Task ExecuteResultAsync(ActionContext context)
     {
         SetContext(context);
+        ProcessResponse();
 
+        await GetResult().ExecuteResultAsync(_context!);
+    }
+
+    protected internal void ProcessResponse()
+    {
         var page = new Page
         {
             Component = _component,
@@ -32,8 +38,8 @@ public class Response : IActionResult
             Url = _context!.RequestedUri()
         };
 
-        var partial = context.GetPartialData();
-        if (partial.Any() && context.IsInertiaPartialComponent(_component))
+        var partial = _context!.GetPartialData();
+        if (partial.Any() && _context!.IsInertiaPartialComponent(_component))
         {
             var only = _props.Only(partial);
             var partialProps = only.ToDictionary(o => o.ToCamelCase(), o =>
@@ -48,18 +54,16 @@ public class Response : IActionResult
             page.Props = props;
         }
 
-        var shared = context.HttpContext.Features.Get<InertiaSharedData>();
+        var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
             page.Props = shared.GetMerged(page.Props);
 
         page.Props["errors"] = GetErrors();
 
         SetPage(page);
-
-        await GetResult().ExecuteResultAsync(_context!);
     }
 
-    private JsonResult GetJson()
+    protected internal JsonResult GetJson()
     {
         _context!.HttpContext.Response.Headers.Add("X-Inertia", "true");
         _context!.HttpContext.Response.Headers.Add("Vary", "Accept");
@@ -87,7 +91,7 @@ public class Response : IActionResult
         return new ViewResult { ViewName = _rootView, ViewData = viewData };
     }
 
-    private IActionResult GetResult() => _context!.IsInertiaRequest() ? GetJson() : GetView();
+    protected internal IActionResult GetResult() => _context!.IsInertiaRequest() ? GetJson() : GetView();
 
     private IDictionary<string, string> GetErrors()
     {
@@ -98,7 +102,7 @@ public class Response : IActionResult
         return new Dictionary<string, string>(0);
     }
 
-    private void SetContext(ActionContext context) => _context = context;
+    protected internal void SetContext(ActionContext context) => _context = context;
 
     private void SetPage(Page page) => _page = page;
 
