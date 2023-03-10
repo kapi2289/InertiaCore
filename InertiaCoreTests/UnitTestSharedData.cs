@@ -1,15 +1,11 @@
 using InertiaCore;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace InertiaCoreTests;
 
 public partial class Tests
 {
-    /// <summary>
-    /// Test if shared data is merged with the props properly.
-    /// </summary>
     [Test]
+    [Description("Test if shared data is merged with the props properly.")]
     public void TestSharedData()
     {
         var response = _factory.Render("Test/Page", new
@@ -17,15 +13,10 @@ public partial class Tests
             Test = "Test"
         });
 
-        var headers = new HeaderDictionary
-        {
-            { "X-Inertia", "true" },
-        };
-
         var sharedData = new InertiaSharedData();
         sharedData.Set("TestShared", "Shared");
 
-        var context = PrepareContext(headers, sharedData);
+        var context = PrepareContext(null, sharedData);
 
         response.SetContext(context);
         response.ProcessResponse();
@@ -36,7 +27,7 @@ public partial class Tests
         {
             { "test", "Test" },
             { "testShared", "Shared" },
-            { "errors", new Dictionary<string, object?>(0) }
+            { "errors", new Dictionary<string, string>(0) }
         }));
     }
 }

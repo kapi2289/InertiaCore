@@ -50,9 +50,13 @@ public class Response : IActionResult
         else
         {
             var props = _props.GetType().GetProperties()
+                .Where(o => o.PropertyType != typeof(LazyProp))
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
+
             page.Props = props;
         }
+
+        page.Props = PrepareProps(page.Props);
 
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
@@ -61,6 +65,16 @@ public class Response : IActionResult
         page.Props["errors"] = GetErrors();
 
         SetPage(page);
+    }
+
+    private static Dictionary<string, object?> PrepareProps(Dictionary<string, object?> props)
+    {
+        return props.ToDictionary(pair => pair.Key, pair => pair.Value switch
+        {
+            Func<object?> f => f.Invoke(),
+            LazyProp l => l.Invoke(),
+            _ => pair.Value
+        });
     }
 
     protected internal JsonResult GetJson()

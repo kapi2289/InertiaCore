@@ -1,14 +1,11 @@
 using InertiaCore;
-using Microsoft.AspNetCore.Http;
 
 namespace InertiaCoreTests;
 
 public partial class Tests
 {
-    /// <summary>
-    /// Tests if the model state dictionary is passed to props correctly.
-    /// </summary>
     [Test]
+    [Description("Test if the model state dictionary is passed to the props correctly.")]
     public void TestModelState()
     {
         var response = _factory.Render("Test/Page", new
@@ -16,12 +13,7 @@ public partial class Tests
             Test = "Test"
         });
 
-        var headers = new HeaderDictionary
-        {
-            { "X-Inertia", "true" },
-        };
-
-        var context = PrepareContext(headers, null, new Dictionary<string, string>
+        var context = PrepareContext(null, null, new Dictionary<string, string>
         {
             { "Field", "Error" }
         });
@@ -35,7 +27,7 @@ public partial class Tests
         {
             { "test", "Test" },
             {
-                "errors", new Dictionary<string, object>
+                "errors", new Dictionary<string, string>
                 {
                     { "field", "Error" }
                 }

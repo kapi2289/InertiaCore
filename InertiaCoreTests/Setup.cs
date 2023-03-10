@@ -15,9 +15,6 @@ public partial class Tests
 {
     private IResponseFactory _factory = null!;
 
-    /// <summary>
-    /// Setups Inertia response factory for the tests.
-    /// </summary>
     [SetUp]
     public void Setup()
     {

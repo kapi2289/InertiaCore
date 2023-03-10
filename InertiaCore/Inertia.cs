@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Html;
 
 [assembly: InternalsVisibleTo("InertiaCoreTests")]
+
 namespace InertiaCore;
 
 public static class Inertia
@@ -25,4 +26,6 @@ public static class Inertia
     public static void Share(string key, object? value) => _factory.Share(key, value);
 
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
+
+    public static LazyProp Lazy(Func<object?> callback) => _factory.Lazy(callback);
 }

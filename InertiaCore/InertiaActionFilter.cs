@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace InertiaCore;
 
-internal class InertiaActionFilter : IActionFilter
+internal abstract class InertiaActionFilter : IActionFilter
 {
     private readonly IUrlHelperFactory _urlHelperFactory;
 
-    public InertiaActionFilter(IUrlHelperFactory urlHelperFactory) => _urlHelperFactory = urlHelperFactory;
+    protected InertiaActionFilter(IUrlHelperFactory urlHelperFactory) => _urlHelperFactory = urlHelperFactory;
 
     public void OnActionExecuting(ActionExecutingContext context)
     {

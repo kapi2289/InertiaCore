@@ -2,10 +2,8 @@ namespace InertiaCoreTests;
 
 public partial class Tests
 {
-    /// <summary>
-    /// Tests if the generated HTML contains valid page data.
-    /// </summary>
     [Test]
+    [Description("Test if the generated HTML contains valid page data.")]
     public async Task TestHtml()
     {
         var html = await _factory.Html(new { Test = "Test" });

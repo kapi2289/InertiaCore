@@ -1,26 +1,32 @@
 using InertiaCore;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace InertiaCoreTests;
 
 public partial class Tests
 {
-    /// <summary>
-    /// Tests if props contain only specified partial data.
-    /// </summary>
     [Test]
+    [Description("Test if the props contain only the specified partial data.")]
     public void TestPartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test",
-            TestPartial = "Partial"
+            TestPartial = "Partial",
+            TestFunc = new Func<string>(() =>
+            {
+                Assert.Fail();
+                return "Func";
+            }),
+            TestLazy = _factory.Lazy(() =>
+            {
+                Assert.Fail();
+                return "Lazy";
+            })
         });
 
         var headers = new HeaderDictionary
         {
-            { "X-Inertia", "true" },
             { "X-Inertia-Partial-Data", "testPartial" },
             { "X-Inertia-Partial-Component", "Test/Page" }
         };
@@ -35,7 +41,7 @@ public partial class Tests
         Assert.That(page?.Props, Is.EqualTo(new Dictionary<string, object?>
         {
             { "testPartial", "Partial" },
-            { "errors", new Dictionary<string, object?>(0) }
+            { "errors", new Dictionary<string, string>(0) }
         }));
     }
 }

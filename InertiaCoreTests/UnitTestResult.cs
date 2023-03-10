@@ -6,11 +6,9 @@ namespace InertiaCoreTests;
 
 public partial class Tests
 {
-    /// <summary>
-    /// Tests if the JSON result is created correctly.
-    /// </summary>
     [Test]
     [Order(1)]
+    [Description("Test if the JSON result is created correctly.")]
     public void TestJsonResult()
     {
         var response = _factory.Render("Test/Page", new
@@ -41,16 +39,14 @@ public partial class Tests
             Assert.That((json as Page)?.Props, Is.EqualTo(new Dictionary<string, object?>
             {
                 { "test", "Test" },
-                { "errors", new Dictionary<string, object?>(0) }
+                { "errors", new Dictionary<string, string>(0) }
             }));
         });
     }
 
-    /// <summary>
-    /// Tests if the view result is created correctly.
-    /// </summary>
     [Test]
     [Order(2)]
+    [Description("Test if the view result is created correctly.")]
     public void TestViewResult()
     {
         var response = _factory.Render("Test/Page", new
@@ -77,7 +73,7 @@ public partial class Tests
             Assert.That((model as Page)?.Props, Is.EqualTo(new Dictionary<string, object?>
             {
                 { "test", "Test" },
-                { "errors", new Dictionary<string, object?>(0) }
+                { "errors", new Dictionary<string, string>(0) }
             }));
         });
     }
