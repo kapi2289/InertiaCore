@@ -1,5 +1,4 @@
 using InertiaCore;
-using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
 using InertiaCore.Utils;
@@ -31,7 +30,7 @@ public partial class Tests
     }
 
     /// <summary>
-    /// Prepares ActionContext for usage in tests.
+    ///     Prepares ActionContext for usage in tests.
     /// </summary>
     /// <param name="headers">Optional request headers.</param>
     /// <param name="sharedData">Optional Inertia shared data.</param>
@@ -57,11 +56,7 @@ public partial class Tests
         var context = new ActionContext(httpContext.Object, new RouteData(), new ActionDescriptor());
 
         if (modelState == null) return context;
-
-        foreach (var (key, value) in modelState)
-        {
-            context.ModelState.AddModelError(key, value);
-        }
+        foreach (var (key, value) in modelState) context.ModelState.AddModelError(key, value);
 
         return context;
     }

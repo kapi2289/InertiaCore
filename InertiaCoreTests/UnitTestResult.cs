@@ -1,4 +1,3 @@
-using InertiaCore;
 using InertiaCore.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +17,7 @@ public partial class Tests
 
         var headers = new HeaderDictionary
         {
-            { "X-Inertia", "true" },
+            { "X-Inertia", "true" }
         };
 
         var context = PrepareContext(headers);
