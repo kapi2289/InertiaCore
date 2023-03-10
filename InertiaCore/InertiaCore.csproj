@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>0.0.5</Version>
+        <Version>0.0.6</Version>
         <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
         <PackageId>AspNetCore.InertiaCore</PackageId>
         <Authors>kapi2289</Authors>
@@ -15,9 +15,12 @@
         <PackageTags>Inertia,Inertiajs,ASPNET,Vue</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.App" Version="2.2.8"/>
         <PackageReference Include="TypeMerger" Version="2.1.1"/>
     </ItemGroup>
 

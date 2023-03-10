@@ -34,7 +34,7 @@ public partial class Tests
             builder.Services.FirstOrDefault(s => s.ServiceType == typeof(IConfigureOptions<MvcOptions>));
 
         var mvcOptions = new MvcOptions();
-        (mvcConfiguration?.ImplementationInstance as ConfigureNamedOptions<MvcOptions>)?.Action(mvcOptions);
+        (mvcConfiguration?.ImplementationInstance as ConfigureNamedOptions<MvcOptions>)?.Action?.Invoke(mvcOptions);
 
         Assert.That(
             mvcOptions.Filters.Any(f => (f as TypeFilterAttribute)?.ImplementationType == typeof(InertiaActionFilter)),
