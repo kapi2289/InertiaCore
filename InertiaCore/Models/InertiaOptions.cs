@@ -1,4 +1,4 @@
-namespace InertiaCore.Extensions;
+namespace InertiaCore.Models;
 
 public class InertiaOptions
 {

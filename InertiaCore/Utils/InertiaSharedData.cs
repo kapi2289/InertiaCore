@@ -1,6 +1,6 @@
 using InertiaCore.Extensions;
 
-namespace InertiaCore;
+namespace InertiaCore.Utils;
 
 internal class InertiaSharedData
 {

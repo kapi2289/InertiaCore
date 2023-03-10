@@ -1,6 +1,7 @@
 using InertiaCore;
 using InertiaCore.Extensions;
 using InertiaCore.Ssr;
+using InertiaCore.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

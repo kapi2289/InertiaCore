@@ -1,4 +1,4 @@
-namespace InertiaCore;
+namespace InertiaCore.Models;
 
 internal class Page
 {

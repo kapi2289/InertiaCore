@@ -1,4 +1,4 @@
-using InertiaCore;
+using InertiaCore.Models;
 using Microsoft.AspNetCore.Http;
 
 namespace InertiaCoreTests;

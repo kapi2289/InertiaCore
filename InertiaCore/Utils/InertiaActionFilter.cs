@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Routing;
 
-namespace InertiaCore;
+namespace InertiaCore.Utils;
 
 internal abstract class InertiaActionFilter : IActionFilter
 {

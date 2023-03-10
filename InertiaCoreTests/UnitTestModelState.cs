@@ -1,4 +1,5 @@
 using InertiaCore;
+using InertiaCore.Models;
 
 namespace InertiaCoreTests;
 

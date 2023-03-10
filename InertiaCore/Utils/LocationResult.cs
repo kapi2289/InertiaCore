@@ -2,7 +2,7 @@ using System.Net;
 using InertiaCore.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
-namespace InertiaCore;
+namespace InertiaCore.Utils;
 
 public class LocationResult : IActionResult
 {
