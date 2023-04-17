@@ -48,6 +48,41 @@ public static class Vite
         JsonElement obj = manifestJson[path];
         var filePath = obj.GetProperty("file");
 
+        if (filePath.ToString().EndsWith(".css"))
+        {
+
+            return new HtmlString(makeCssTag(filePath.ToString()));
+        }
+
+        // Handle JS and CSS combo
+        var html = makeJsTag(filePath.ToString());
+
+        try
+        {
+            var css = obj.GetProperty("css");
+            foreach (JsonElement item in css.EnumerateArray())
+            {
+                html = html + makeCssTag(item.ToString());
+            }
+        }
+        catch (Exception)
+        {
+
+        }
+
+        return new HtmlString(html);
+    }
+
+    private static string makeCssTag(string filePath)
+    {
+        var builder = new TagBuilder("style");
+        builder.Attributes.Add("type", "text/css");
+        builder.InnerHtml.AppendHtml(File.ReadAllText(publicDir(filePath)));
+        return GetString(builder);
+    }
+
+    private static string makeJsTag(string filePath)
+    {
         var builder = new TagBuilder("script");
         builder.Attributes.Add("type", "text/javascript");
 
@@ -57,25 +92,7 @@ public static class Vite
             builder.InnerHtml.AppendHtml(File.ReadAllText(physicalPath));
         }
 
-        var html = GetString(builder);
-
-        try
-        {
-            var css = obj.GetProperty("css");
-            foreach (JsonElement item in css.EnumerateArray())
-            {
-                var cssBuilder = new TagBuilder("style");
-                cssBuilder.Attributes.Add("type", "text/css");
-                cssBuilder.InnerHtml.AppendHtml(File.ReadAllText(publicDir(item.ToString())));
-                html = html + GetString(cssBuilder);
-            }
-        }
-        catch (Exception)
-        {
-
-        }
-
-        return new HtmlString(html);
+        return GetString(builder);
     }
 
     private static string hotAsset(string path)
