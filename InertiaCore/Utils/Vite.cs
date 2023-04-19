@@ -8,16 +8,59 @@ namespace InertiaCore.Utils;
 public static class Vite
 {
 
-    private static string GetString(IHtmlContent content)
+    // The path to the "hot" file.
+    private static string hotFile = "hot";
+
+    // The path to the build directory.
+    private static string? buildDirectory = "build";
+
+    // The name of the manifest file.
+    private static string manifestFilename = "manifest.json";
+
+    // The path to the public directory.
+    private static string publicDirectory = "wwwroot";
+    public static string GetString(IHtmlContent content)
     {
         var writer = new System.IO.StringWriter();
         content.WriteTo(writer, HtmlEncoder.Default);
         return writer.ToString();
     }
 
-    private static string publicDir(string path)
+    // Set the filename for the manifest file.
+    public static string useManifestFilename(string newManifestFilename)
     {
-        return "wwwroot/build/" + path;
+        return manifestFilename = newManifestFilename;
+    }
+
+    // Set the Vite "hot" file path.
+    public static string useHotFile(string newHotFile)
+    {
+        return hotFile = newHotFile;
+    }
+
+    //  Set the Vite build directory.
+    public static string? useBuildDir(string? newBuildDirectory)
+    {
+        return buildDirectory = newBuildDirectory;
+    }
+
+    //  Set the public directory.
+    public static string usePublicDir(string newPublicDirectory)
+    {
+        return publicDirectory = newPublicDirectory;
+    }
+
+    //  Get the public directory and build path.
+    private static string getPublicDir(string path)
+    {
+        var pieces = new List<string>();
+        pieces.Add(publicDirectory);
+        if (buildDirectory != null && buildDirectory != "")
+        {
+            pieces.Add(buildDirectory);
+        }
+        pieces.Add(path);
+        return String.Join("/", pieces);
     }
 
     public static HtmlString input(string path)
@@ -27,12 +70,12 @@ public static class Vite
             return new HtmlString(makeModuleTag(hotAsset("@vite/client")) + makeModuleTag(hotAsset(path)));
         }
 
-        if (!File.Exists(publicDir("manifest.json")))
+        if (!File.Exists(getPublicDir(manifestFilename)))
         {
             throw new Exception("Vite Manifest is missing. Run `npm run build` and try again.");
         }
 
-        var manifest = File.ReadAllText(publicDir("manifest.json"));
+        var manifest = File.ReadAllText(getPublicDir(manifestFilename));
         var manifestJson = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(manifest);
 
         if (manifestJson == null)
