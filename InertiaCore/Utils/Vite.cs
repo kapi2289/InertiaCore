@@ -2,6 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Text.RegularExpressions;
 
 namespace InertiaCore.Utils;
 
@@ -118,7 +119,7 @@ public static class Vite
 
     private static bool isCssPath(string path)
     {
-        return Regex.IsMatch(path, @"/\.(css|less|sass|scss|styl|stylus|pcss|postcss)+$/", RegexOptions.IgnoreCase);
+        return Regex.IsMatch(path, @".\.(css|less|sass|scss|styl|stylus|pcss|postcss)", RegexOptions.IgnoreCase);
     }
 
     private static string makeCssTag(string filePath)
