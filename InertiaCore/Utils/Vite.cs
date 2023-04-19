@@ -22,27 +22,31 @@ public static class Vite
     private static string publicDirectory = "wwwroot";
 
     // Set the filename for the manifest file.
-    public static string useManifestFilename(string newManifestFilename)
+    public static string? useManifestFilename(string newManifestFilename)
     {
-        return manifestFilename = newManifestFilename;
+        manifestFilename = newManifestFilename;
+        return null;
     }
 
     // Set the Vite "hot" file path.
-    public static string useHotFile(string newHotFile)
+    public static string? useHotFile(string newHotFile)
     {
-        return hotFile = newHotFile;
+        hotFile = newHotFile;
+        return null;
     }
 
     //  Set the Vite build directory.
     public static string? useBuildDir(string? newBuildDirectory)
     {
-        return buildDirectory = newBuildDirectory;
+        buildDirectory = newBuildDirectory;
+        return null;
     }
 
     //  Set the public directory.
-    public static string usePublicDir(string newPublicDirectory)
+    public static string? usePublicDir(string newPublicDirectory)
     {
-        return publicDirectory = newPublicDirectory;
+        publicDirectory = newPublicDirectory;
+        return null;
     }
 
     //  Get the public directory and build path.
