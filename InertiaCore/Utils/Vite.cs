@@ -6,63 +6,48 @@ using System.Text.RegularExpressions;
 
 namespace InertiaCore.Utils;
 
-public static class Vite
-{
 
+class ViteBuilder
+{
     // The path to the "hot" file.
-    private static string hotFile = "hot";
+    public string hotFile = "hot";
 
     // The path to the build directory.
-    private static string? buildDirectory = "build";
+    public string? buildDirectory = "build";
 
     // The name of the manifest file.
-    private static string manifestFilename = "manifest.json";
+    public string manifestFilename = "manifest.json";
 
     // The path to the public directory.
-    private static string publicDirectory = "wwwroot";
+    public string publicDirectory = "wwwroot";
 
-    // Set the filename for the manifest file.
-    public static string? useManifestFilename(string newManifestFilename)
+    public static ViteBuilder? instance = null;
+    public static ViteBuilder Instance
     {
-        manifestFilename = newManifestFilename;
-        return null;
-    }
-
-    // Set the Vite "hot" file path.
-    public static string? useHotFile(string newHotFile)
-    {
-        hotFile = newHotFile;
-        return null;
-    }
-
-    //  Set the Vite build directory.
-    public static string? useBuildDir(string? newBuildDirectory)
-    {
-        buildDirectory = newBuildDirectory;
-        return null;
-    }
-
-    //  Set the public directory.
-    public static string? usePublicDir(string newPublicDirectory)
-    {
-        publicDirectory = newPublicDirectory;
-        return null;
+        get
+        {
+            if (instance == null)
+            {
+                instance = new ViteBuilder();
+            }
+            return instance;
+        }
     }
 
     //  Get the public directory and build path.
-    private static string getPublicDir(string path)
+    protected string getPublicDir(string path)
     {
         var pieces = new List<string>();
-        pieces.Add(publicDirectory);
-        if (buildDirectory != null && buildDirectory != "")
+        pieces.Add(ViteBuilder.Instance.publicDirectory);
+        if (ViteBuilder.Instance.buildDirectory != null && ViteBuilder.Instance.buildDirectory != "")
         {
-            pieces.Add(buildDirectory);
+            pieces.Add(ViteBuilder.Instance.buildDirectory);
         }
         pieces.Add(path);
         return String.Join("/", pieces);
     }
 
-    public static HtmlString input(string path)
+    public HtmlString input(string path)
     {
         if (isRunningHot())
         {
@@ -115,7 +100,7 @@ public static class Vite
         return new HtmlString(html);
     }
 
-    private static string? makeModuleTag(string path)
+    protected string? makeModuleTag(string path)
     {
         var builder = new TagBuilder("script");
         builder.Attributes.Add("type", "module");
@@ -125,7 +110,7 @@ public static class Vite
     }
 
     // Generate an appropriate tag for the given URL in HMR mode.
-    private static string makeTag(string url)
+    protected string makeTag(string url)
     {
         if (isCssPath(url))
         {
@@ -137,7 +122,7 @@ public static class Vite
 
 
     // Generate a script tag for the given URL.
-    private static string makeScriptTag(string filePath)
+    protected string makeScriptTag(string filePath)
     {
         var builder = new TagBuilder("script");
         builder.Attributes.Add("type", "text/javascript");
@@ -146,7 +131,7 @@ public static class Vite
     }
 
     // Generate a stylesheet tag for the given URL in HMR mode.
-    private static string makeStylesheetTag(string filePath)
+    protected string makeStylesheetTag(string filePath)
     {
         var builder = new TagBuilder("link");
         builder.Attributes.Add("rel", "stylesheet");
@@ -155,13 +140,13 @@ public static class Vite
     }
 
     // Determine whether the given path is a CSS file.
-    private static bool isCssPath(string path)
+    protected bool isCssPath(string path)
     {
         return Regex.IsMatch(path, @".\.(css|less|sass|scss|styl|stylus|pcss|postcss)", RegexOptions.IgnoreCase);
     }
 
     // Generate React refresh runtime script.
-    public static HtmlString reactRefresh()
+    public HtmlString reactRefresh()
     {
 
         if (!isRunningHot())
@@ -186,7 +171,7 @@ public static class Vite
     }
 
     // Get the path to a given asset when running in HMR mode.
-    private static string hotAsset(string path)
+    protected string hotAsset(string path)
     {
         var hotFilePath = getPublicDir(hotFile);
         var hotContents = File.ReadAllText(hotFilePath);
@@ -196,7 +181,7 @@ public static class Vite
     }
 
     // Get the URL for an asset.
-    public static string asset(string path)
+    protected string asset(string path)
     {
         if (isRunningHot())
         {
@@ -212,16 +197,60 @@ public static class Vite
         return "/" + String.Join("/", pieces);
     }
 
-    private static bool isRunningHot()
+    protected bool isRunningHot()
     {
         return File.Exists(getPublicDir("hot"));
     }
 
-    private static string GetString(IHtmlContent content)
+    protected string GetString(IHtmlContent content)
     {
         var writer = new System.IO.StringWriter();
         content.WriteTo(writer, HtmlEncoder.Default);
         return writer.ToString();
+    }
+}
+
+public static class Vite
+{
+
+    // Set the filename for the manifest file.
+    public static string? useManifestFilename(string manifestFilename)
+    {
+        ViteBuilder.Instance.manifestFilename = manifestFilename;
+        return null;
+    }
+
+    // Set the Vite "hot" file path.
+    public static string? useHotFile(string hotFile)
+    {
+        ViteBuilder.Instance.hotFile = hotFile;
+        return null;
+    }
+
+    //  Set the Vite build directory.
+    public static string? useBuildDir(string? buildDirectory)
+    {
+        ViteBuilder.Instance.buildDirectory = buildDirectory;
+        return null;
+    }
+
+    //  Set the public directory.
+    public static string? usePublicDir(string publicDirectory)
+    {
+        ViteBuilder.Instance.publicDirectory = publicDirectory;
+        return null;
+    }
+
+    // Generate tag(s) for the given input path.
+    public static HtmlString input(string path)
+    {
+        return ViteBuilder.Instance.input(path);
+    }
+
+    // Generate React refresh runtime script.
+    public static HtmlString reactRefresh()
+    {
+        return ViteBuilder.Instance.reactRefresh();
     }
 }
 
