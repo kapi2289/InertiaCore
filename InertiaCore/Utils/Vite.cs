@@ -20,12 +20,6 @@ public static class Vite
 
     // The path to the public directory.
     private static string publicDirectory = "wwwroot";
-    public static string GetString(IHtmlContent content)
-    {
-        var writer = new System.IO.StringWriter();
-        content.WriteTo(writer, HtmlEncoder.Default);
-        return writer.ToString();
-    }
 
     // Set the filename for the manifest file.
     public static string useManifestFilename(string newManifestFilename)
@@ -95,18 +89,18 @@ public static class Vite
         if (isCssPath(filePath.ToString()))
         {
 
-            return new HtmlString(makeCssTag(filePath.ToString()));
+            return new HtmlString(makeTag(filePath.ToString()));
         }
 
         // Handle JS and CSS combo
-        var html = makeJsTag(filePath.ToString());
+        var html = makeTag(filePath.ToString());
 
         try
         {
             var css = obj.GetProperty("css");
             foreach (JsonElement item in css.EnumerateArray())
             {
-                html = html + makeCssTag(item.ToString());
+                html = html + makeTag(item.ToString());
             }
         }
         catch (Exception)
@@ -117,58 +111,52 @@ public static class Vite
         return new HtmlString(html);
     }
 
+    private static string? makeModuleTag(string path)
+    {
+        var builder = new TagBuilder("script");
+        builder.Attributes.Add("type", "module");
+        builder.Attributes.Add("src", path);
+
+        return new HtmlString(GetString(builder)).Value + "\n\t";
+    }
+
+    // Generate an appropriate tag for the given URL in HMR mode.
+    private static string makeTag(string url)
+    {
+        if (isCssPath(url))
+        {
+            return makeStylesheetTag(url);
+        }
+
+        return makeScriptTag(url);
+    }
+
+
+    // Generate a script tag for the given URL.
+    private static string makeScriptTag(string filePath)
+    {
+        var builder = new TagBuilder("script");
+        builder.Attributes.Add("type", "text/javascript");
+        builder.Attributes.Add("src", asset(filePath));
+        return GetString(builder) + "\n\t";
+    }
+
+    // Generate a stylesheet tag for the given URL in HMR mode.
+    private static string makeStylesheetTag(string filePath)
+    {
+        var builder = new TagBuilder("link");
+        builder.Attributes.Add("rel", "stylesheet");
+        builder.Attributes.Add("href", asset(filePath));
+        return GetString(builder).Replace("></link>", " />") + "\n\t";
+    }
+
+    // Determine whether the given path is a CSS file.
     private static bool isCssPath(string path)
     {
         return Regex.IsMatch(path, @".\.(css|less|sass|scss|styl|stylus|pcss|postcss)", RegexOptions.IgnoreCase);
     }
 
-    private static string makeCssTag(string filePath)
-    {
-        var builder = new TagBuilder("style");
-        builder.Attributes.Add("type", "text/css");
-        builder.InnerHtml.AppendHtml(File.ReadAllText(publicDir(filePath)));
-        return GetString(builder);
-    }
-
-    private static string makeJsTag(string filePath)
-    {
-        var builder = new TagBuilder("script");
-        builder.Attributes.Add("type", "text/javascript");
-
-        var physicalPath = publicDir(filePath.ToString());
-        if (File.Exists(physicalPath))
-        {
-            builder.InnerHtml.AppendHtml(File.ReadAllText(physicalPath));
-        }
-
-        return GetString(builder);
-    }
-
-    private static string hotAsset(string path)
-    {
-        var hotfile = publicDir("hot");
-        var hotContents = File.ReadAllText(hotfile);
-
-        return hotContents + "/" + path;
-    }
-
-    private static bool isRunningHot()
-    {
-        return File.Exists(publicDir("hot"));
-    }
-
-    private static string? makeModuleTag(string path)
-    {
-        var builder = new TagBuilder("script");
-        builder.Attributes.Add("type", "module");
-
-
-        builder.Attributes.Add("src", path);
-
-        return new HtmlString(GetString(builder)).Value;
-    }
-
-
+    // Generate React refresh runtime script.
     public static HtmlString reactRefresh()
     {
 
@@ -191,6 +179,45 @@ public static class Vite
         builder.InnerHtml.AppendHtml(inner);
 
         return new HtmlString(GetString(builder));
+    }
+
+    // Get the path to a given asset when running in HMR mode.
+    private static string hotAsset(string path)
+    {
+        var hotFilePath = getPublicDir(hotFile);
+        var hotContents = File.ReadAllText(hotFilePath);
+
+        return hotContents + "/" + path;
+
+    }
+
+    // Get the URL for an asset.
+    public static string asset(string path)
+    {
+        if (isRunningHot())
+        {
+            return hotAsset(path);
+        }
+
+        var pieces = new List<string>();
+        if (buildDirectory != null && buildDirectory != "")
+        {
+            pieces.Add(buildDirectory);
+        }
+        pieces.Add(path);
+        return "/" + String.Join("/", pieces);
+    }
+
+    private static bool isRunningHot()
+    {
+        return File.Exists(getPublicDir("hot"));
+    }
+
+    private static string GetString(IHtmlContent content)
+    {
+        var writer = new System.IO.StringWriter();
+        content.WriteTo(writer, HtmlEncoder.Default);
+        return writer.ToString();
     }
 }
 
