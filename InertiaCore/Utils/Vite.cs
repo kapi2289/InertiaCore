@@ -48,7 +48,7 @@ public static class Vite
         JsonElement obj = manifestJson[path];
         var filePath = obj.GetProperty("file");
 
-        if (filePath.ToString().EndsWith(".css"))
+        if (isCssPath(filePath.ToString()))
         {
 
             return new HtmlString(makeCssTag(filePath.ToString()));
@@ -71,6 +71,11 @@ public static class Vite
         }
 
         return new HtmlString(html);
+    }
+
+    private static bool isCssPath(string path)
+    {
+        return Regex.IsMatch(path, @"/\.(css|less|sass|scss|styl|stylus|pcss|postcss)+$/", RegexOptions.IgnoreCase);
     }
 
     private static string makeCssTag(string filePath)
