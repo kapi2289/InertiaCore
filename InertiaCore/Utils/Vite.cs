@@ -3,7 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text.RegularExpressions;
-
+using System.IO.Abstractions;
 namespace InertiaCore.Utils;
 
 
@@ -21,21 +21,24 @@ public class ViteBuilder
     // The path to the public directory.
     public string publicDirectory = "wwwroot";
 
+    private readonly IFileSystem _fileSystem;
+
     public static ViteBuilder? instance = null;
     public static ViteBuilder Instance
     {
         get
         {
-            if (instance == null)
-            {
-                instance = new ViteBuilder();
-            }
-            return instance;
+            return instance ??= new ViteBuilder(new FileSystem());
         }
     }
 
+    public ViteBuilder(IFileSystem fileSystem)
+    {
+        this._fileSystem = fileSystem;
+    }
+
     //  Get the public directory and build path.
-    protected virtual string getPublicDir(string path)
+    protected string getPublicDir(string path)
     {
         var pieces = new List<string>();
         pieces.Add(ViteBuilder.Instance.publicDirectory);
@@ -54,12 +57,12 @@ public class ViteBuilder
             return new HtmlString(makeModuleTag(hotAsset("@vite/client")) + makeModuleTag(hotAsset(path)));
         }
 
-        if (!exists(getPublicDir(manifestFilename)))
+        if (!_fileSystem.File.Exists(getPublicDir(manifestFilename)))
         {
             throw new Exception("Vite Manifest is missing. Run `npm run build` and try again.");
         }
 
-        var manifest = readFile(getPublicDir(manifestFilename));
+        var manifest = _fileSystem.File.ReadAllText(getPublicDir(manifestFilename));
         var manifestJson = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(manifest);
 
         if (manifestJson == null)
@@ -170,17 +173,17 @@ public class ViteBuilder
     }
 
     // Get the path to a given asset when running in HMR mode.
-    protected virtual string hotAsset(string path)
+    protected string hotAsset(string path)
     {
         var hotFilePath = getPublicDir(hotFile);
-        var hotContents = readFile(hotFilePath);
+        var hotContents = _fileSystem.File.ReadAllText(hotFilePath);
 
         return hotContents + "/" + path;
 
     }
 
     // Get the URL for an asset.
-    public string asset(string path)
+    protected string asset(string path)
     {
         if (isRunningHot())
         {
@@ -196,19 +199,9 @@ public class ViteBuilder
         return "/" + String.Join("/", pieces);
     }
 
-    protected virtual bool isRunningHot()
+    protected bool isRunningHot()
     {
-        return exists(getPublicDir("hot"));
-    }
-
-    protected virtual string readFile(string path)
-    {
-        return File.ReadAllText(path);
-    }
-
-    protected virtual bool exists(string path)
-    {
-        return File.Exists(path);
+        return _fileSystem.File.Exists(getPublicDir("hot"));
     }
 
     protected string GetString(IHtmlContent content)
