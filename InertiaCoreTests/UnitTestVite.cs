@@ -138,11 +138,35 @@ public partial class Tests
            "<script src=\"http://127.0.0.1:5174/index.scss\" type=\"module\"></script>\n\t"));
 
         // Basic JS File via hot
-        // fileSystem.AddFile(@"/wwwroot/build/manifest.json", new MockFileData("{\"app.tsx\": {\"file\": \"assets/main-19038c6a.js\"}}"));
-
         result = mock.Object.input("app.tsx");
         Assert.That(result.ToString(), Is.EqualTo("<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
             "<script src=\"http://127.0.0.1:5174/app.tsx\" type=\"module\"></script>\n\t"));
     }
 
+    [Test]
+    public void TestViteFacade()
+    {
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData> { });
+
+        var mock = new Mock<ViteBuilder>(fileSystem);
+
+        Vite.setInstance(mock.Object);
+
+        Vite.useBuildDir("build2");
+        Vite.useManifestFilename("manifest-test.json");
+        Vite.useHotFile("cold");
+        Vite.usePublicDir("public");
+
+        // Basic Manifest with CSS file
+        fileSystem.AddFile(@"/public/build2/manifest-test.json", new MockFileData("{\"index.scss\": {\"file\": \"assets/index.css\"}}"));
+        var result = Vite.input("index.scss");
+        Assert.That(result.ToString(), Is.EqualTo("<link href=\"/build2/assets/index.css\" rel=\"stylesheet\" />\n\t"));
+
+        // Hot file with css import
+        Vite.useBuildDir(null);
+        fileSystem.AddFile(@"/public/cold", new MockFileData("http://127.0.0.1:5174"));
+        result = Vite.input("index.scss");
+        Assert.That(result.ToString(), Is.EqualTo("<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
+           "<script src=\"http://127.0.0.1:5174/index.scss\" type=\"module\"></script>\n\t"));
+    }
 }

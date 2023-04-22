@@ -39,13 +39,18 @@ internal class ViteBuilder : IViteBuilder
 
     private readonly IFileSystem _fileSystem;
 
-    private static ViteBuilder? instance = null;
-    public static ViteBuilder Instance
+    private static IViteBuilder? instance = null;
+    public static IViteBuilder Instance
     {
         get
         {
             return instance ??= new ViteBuilder(new FileSystem());
         }
+    }
+
+    public static void setInstance(IViteBuilder? newInstance)
+    {
+        instance = newInstance;
     }
 
     public ViteBuilder(IFileSystem fileSystem)
@@ -314,6 +319,12 @@ public static class Vite
     public static HtmlString reactRefresh()
     {
         return ViteBuilder.Instance.reactRefresh();
+    }
+
+    // Set the IViteBuilder instance.
+    public static void setInstance(IViteBuilder instance)
+    {
+        ViteBuilder.setInstance(instance);
     }
 }
 
