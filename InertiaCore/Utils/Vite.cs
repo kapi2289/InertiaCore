@@ -12,21 +12,14 @@ public interface IViteBuilder
     public HtmlString reactRefresh();
     public HtmlString input(string path);
 
-    public string getHotFile();
+    public IViteBuilder useHotFile(string hotFile);
 
-    public void useHotFile(string hotFile);
+    public IViteBuilder useBuildDirectory(string? buildDirectory);
 
-    public string? getBuildDirectory();
 
-    public void useBuildDirectory(string? buildDirectory);
+    public IViteBuilder useManifestFilename(string manifestFilename);
 
-    public string getManifestFilename();
-
-    public void useManifestFilename(string manifestFilename);
-
-    public string getPublicDirectory();
-
-    public void usePublicDirectory(string publicDirectory);
+    public IViteBuilder usePublicDirectory(string publicDirectory);
 }
 
 
@@ -65,9 +58,10 @@ internal class ViteBuilder : IViteBuilder
         return this.hotFile;
     }
 
-    public void useHotFile(string hotFile)
+    public IViteBuilder useHotFile(string hotFile)
     {
         this.hotFile = hotFile;
+        return this;
     }
 
     public string? getBuildDirectory()
@@ -75,9 +69,10 @@ internal class ViteBuilder : IViteBuilder
         return this.buildDirectory;
     }
 
-    public void useBuildDirectory(string? buildDirectory)
+    public IViteBuilder useBuildDirectory(string? buildDirectory)
     {
         this.buildDirectory = buildDirectory;
+        return this;
     }
 
     public string getManifestFilename()
@@ -85,9 +80,10 @@ internal class ViteBuilder : IViteBuilder
         return this.manifestFilename;
     }
 
-    public void useManifestFilename(string manifestFilename)
+    public IViteBuilder useManifestFilename(string manifestFilename)
     {
         this.manifestFilename = manifestFilename;
+        return this;
     }
 
     public string getPublicDirectory()
@@ -95,9 +91,10 @@ internal class ViteBuilder : IViteBuilder
         return this.publicDirectory;
     }
 
-    public void usePublicDirectory(string publicDirectory)
+    public IViteBuilder usePublicDirectory(string publicDirectory)
     {
         this.publicDirectory = publicDirectory;
+        return this;
     }
 
     //  Get the public directory and build path.
@@ -280,31 +277,31 @@ public static class Vite
 {
 
     // Set the filename for the manifest file.
-    public static string? useManifestFilename(string manifestFilename)
+    public static IViteBuilder? useManifestFilename(string manifestFilename)
     {
-        ViteBuilder.Instance.manifestFilename = manifestFilename;
-        return null;
+        ViteBuilder.Instance.useManifestFilename(manifestFilename);
+        return ViteBuilder.Instance;
     }
 
     // Set the Vite "hot" file path.
-    public static string? useHotFile(string hotFile)
+    public static IViteBuilder useHotFile(string hotFile)
     {
-        ViteBuilder.Instance.hotFile = hotFile;
-        return null;
+        ViteBuilder.Instance.useHotFile(hotFile);
+        return ViteBuilder.Instance;
     }
 
     //  Set the Vite build directory.
-    public static string? useBuildDir(string? buildDirectory)
+    public static IViteBuilder useBuildDir(string? buildDirectory)
     {
-        ViteBuilder.Instance.buildDirectory = buildDirectory;
-        return null;
+        ViteBuilder.Instance.useBuildDirectory(buildDirectory);
+        return ViteBuilder.Instance;
     }
 
     //  Set the public directory.
-    public static string? usePublicDir(string publicDirectory)
+    public static IViteBuilder usePublicDir(string publicDirectory)
     {
-        ViteBuilder.Instance.publicDirectory = publicDirectory;
-        return null;
+        ViteBuilder.Instance.usePublicDirectory(publicDirectory);
+        return ViteBuilder.Instance;
     }
 
     // Generate tag(s) for the given input path.
