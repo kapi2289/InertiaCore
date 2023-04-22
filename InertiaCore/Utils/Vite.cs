@@ -109,10 +109,11 @@ internal class ViteBuilder : IViteBuilder
     protected string getPublicDir(string path)
     {
         var pieces = new List<string>();
-        pieces.Add(ViteBuilder.Instance.publicDirectory);
-        if (ViteBuilder.Instance.buildDirectory != null && ViteBuilder.Instance.buildDirectory != "")
+        pieces.Add(getPublicDirectory());
+        var buildDirectory = getBuildDirectory();
+        if (buildDirectory != null && buildDirectory != "")
         {
-            pieces.Add(ViteBuilder.Instance.buildDirectory);
+            pieces.Add(buildDirectory);
         }
         pieces.Add(path);
         return String.Join("/", pieces);
