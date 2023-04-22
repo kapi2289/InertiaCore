@@ -106,7 +106,7 @@ internal class ViteBuilder : IViteBuilder
     }
 
     //  Get the public directory and build path.
-    protected string getPublicDir(string path)
+    protected string getPublicPathForFile(string path)
     {
         var pieces = new List<string>();
         pieces.Add(getPublicDirectory());
@@ -126,12 +126,12 @@ internal class ViteBuilder : IViteBuilder
             return new HtmlString(makeModuleTag(hotAsset("@vite/client")) + makeModuleTag(hotAsset(path)));
         }
 
-        if (!_fileSystem.File.Exists(getPublicDir(manifestFilename)))
+        if (!_fileSystem.File.Exists(getPublicPathForFile(manifestFilename)))
         {
             throw new Exception("Vite Manifest is missing. Run `npm run build` and try again.");
         }
 
-        var manifest = _fileSystem.File.ReadAllText(getPublicDir(manifestFilename));
+        var manifest = _fileSystem.File.ReadAllText(getPublicPathForFile(manifestFilename));
         var manifestJson = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(manifest);
 
         if (manifestJson == null)
@@ -244,7 +244,7 @@ internal class ViteBuilder : IViteBuilder
     // Get the path to a given asset when running in HMR mode.
     protected string hotAsset(string path)
     {
-        var hotFilePath = getPublicDir(hotFile);
+        var hotFilePath = getPublicPathForFile(hotFile);
         var hotContents = _fileSystem.File.ReadAllText(hotFilePath);
 
         return hotContents + "/" + path;
@@ -270,7 +270,7 @@ internal class ViteBuilder : IViteBuilder
 
     protected bool isRunningHot()
     {
-        return _fileSystem.File.Exists(getPublicDir("hot"));
+        return _fileSystem.File.Exists(getPublicPathForFile("hot"));
     }
 
     protected string GetString(IHtmlContent content)
