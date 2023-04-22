@@ -75,11 +75,6 @@ internal class ViteBuilder : IViteBuilder
         return this.buildDirectory;
     }
 
-    public string getCurrentDirectory()
-    {
-        return this._fileSystem.Directory.GetCurrentDirectory();
-    }
-
     public void useBuildDirectory(string? buildDirectory)
     {
         this.buildDirectory = buildDirectory;
