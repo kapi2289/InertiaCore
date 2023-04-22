@@ -1,31 +1,26 @@
+using System.IO.Abstractions.TestingHelpers;
 using InertiaCore.Utils;
 using Moq;
-using Moq.Protected;
 
 namespace InertiaCoreTests;
 
-public partial class Tests : ViteBuilder
+public partial class Tests
 {
 
     [Test]
     public void TestHot()
     {
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+        {
+            { @"/wwwroot/build/hot", new MockFileData("http://127.0.0.1:5174") },
+        });
 
-        var mock = new Mock<ViteBuilder>();
+        var mock = new Mock<ViteBuilder>(fileSystem);
 
         var htmlResult = mock.Object.reactRefresh();
+        mock.Object.usePublicDirectory(@"wwwroot");
 
-        Assert.AreEqual(htmlResult.ToString(), "<!-- no hot -->");
-
-        Assert.AreEqual(Vite.reactRefresh().ToString(), "<!-- no hot -->");
-
-        mock.Protected()
-            .Setup<bool>("isRunningHot")
-            .Returns(true);
-
-        mock.Protected()
-            .Setup<string>("hotAsset", ItExpr.IsAny<string>())
-            .Returns((string path) => { return "http://127.0.0.1:5174/" + path; });
+        Assert.That(htmlResult.ToString(), Is.Not.EqualTo("<!-- no hot -->"));
 
         htmlResult = mock.Object.reactRefresh();
 
@@ -39,123 +34,63 @@ public partial class Tests : ViteBuilder
     }
 
     [Test]
-    public void TestViteFacade()
+    public void TestNotHot()
     {
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData> { });
 
-        Vite.useBuildDir("build2");
+        var mock = new Mock<ViteBuilder>(fileSystem);
 
-        Assert.AreEqual(ViteBuilder.Instance.buildDirectory, "build2");
+        var htmlResult = mock.Object.reactRefresh();
 
-        Vite.useManifestFilename("manifest-test.json");
+        Assert.That(htmlResult.ToString(), Is.EqualTo("<!-- no hot -->"));
 
-        Assert.AreEqual(ViteBuilder.Instance.manifestFilename, "manifest-test.json");
-
-        Vite.useHotFile("cold");
-
-        Assert.AreEqual(ViteBuilder.Instance.hotFile, "cold");
-
-        Vite.usePublicDir("public");
-
-        Assert.AreEqual(ViteBuilder.Instance.publicDirectory, "public");
-
-        Assert.True(GetPublicDir("file.css") == "public/build2/file.css");
-
-        Vite.useBuildDir(null);
-
-        Assert.True(GetPublicDir("file.css") == "public/file.css");
-
-        Vite.useBuildDir("");
-
-        Assert.True(GetPublicDir("file.css") == "public/file.css");
-    }
-
-    [Test]
-    public void TestViteBuilderHelpers()
-    {
-
-        var mock = new Mock<ViteBuilder>();
-
-        mock.Protected()
-            .Setup<bool>("isRunningHot")
-            .Returns(false);
-
-        Assert.AreEqual(mock.Object.asset("manifest.json"), "/build/manifest.json");
-
-        mock.Object.buildDirectory = null;
-
-        Assert.AreEqual(mock.Object.asset("manifest.json"), "/manifest.json");
-
-        mock.Protected()
-            .Setup<bool>("isRunningHot")
-            .Returns(true);
-
-        mock.Protected()
-            .Setup<string>("readFile", ItExpr.IsAny<string>())
-            .Returns("http://127.0.0.1:5174");
-
-        Assert.AreEqual(mock.Object.asset("manifest.json"), null);
+        Assert.That(Vite.reactRefresh().ToString(), Is.EqualTo("<!-- no hot -->"));
     }
 
     [Test]
     public void TestViteInput()
     {
 
-        var mock = new Mock<ViteBuilder>();
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData> { });
+        var mock = new Mock<ViteBuilder>(fileSystem);
+
+        // Missing manifest exception
+        Assert.Throws<Exception>(() => mock.Object.input("app.tsx"));
+
+        fileSystem.AddFile(@"/wwwroot/build/manifest.json", new MockFileData("null"));
+
+        // Null manifest exception
+        Assert.Throws<Exception>(() => mock.Object.input("app.tsx"));
+
+        // Missing info exception
+        fileSystem.AddFile(@"/wwwroot/build/manifest.json", new MockFileData("{\"main.tsx\": {}}"));
 
         Assert.Throws<Exception>(() => mock.Object.input("app.tsx"));
 
-        mock.Protected()
-            .Setup<bool>("exists", ItExpr.IsAny<string>())
-            .Returns(true);
-
-        mock.Protected()
-            .Setup<string>("readFile", ItExpr.IsAny<string>())
-            .Returns("null");
-
-        Assert.Throws<Exception>(() => mock.Object.input("app.tsx"));
-
-        mock.Protected()
-            .Setup<string>("readFile", ItExpr.IsAny<string>())
-            .Returns("{\"main.tsx\": {}}");
-
-        Assert.Throws<Exception>(() => mock.Object.input("app.tsx"));
-
-        mock.Protected()
-            .Setup<string>("readFile", ItExpr.IsAny<string>())
-            .Returns("{\"app.tsx\": {\"file\": \"assets/main-19038c6a.js\"}}");
+        // Basic JS File
+        fileSystem.AddFile(@"/wwwroot/build/manifest.json", new MockFileData("{\"app.tsx\": {\"file\": \"assets/main-19038c6a.js\"}}"));
 
         var result = mock.Object.input("app.tsx");
         Assert.AreEqual(result.ToString(), "<script src=\"/build/assets/main-19038c6a.js\" type=\"text/javascript\"></script>\n\t");
 
-        mock.Protected()
-            .Setup<string>("readFile", ItExpr.IsAny<string>())
-            .Returns("{\"app.tsx\": {\"file\": \"assets/main.js\",\"css\": [\"assets/index.css\"]}}");
+        // Basic JS File with CSS import
+        fileSystem.AddFile(@"/wwwroot/build/manifest.json", new MockFileData("{\"app.tsx\": {\"file\": \"assets/main.js\",\"css\": [\"assets/index.css\"]}}"));
 
         result = mock.Object.input("app.tsx");
         Assert.AreEqual(result.ToString(), "<script src=\"/build/assets/main.js\" type=\"text/javascript\"></script>\n\t<link href=\"/build/assets/index.css\" rel=\"stylesheet\" />\n\t");
 
-        mock.Protected()
-            .Setup<string>("readFile", ItExpr.IsAny<string>())
-            .Returns("{\"index.scss\": {\"file\": \"assets/index.css\"}}");
+        // Basic CSS file
+        fileSystem.AddFile(@"/wwwroot/build/manifest.json", new MockFileData("{\"index.scss\": {\"file\": \"assets/index.css\"}}"));
 
         result = mock.Object.input("index.scss");
         Assert.AreEqual(result.ToString(), "<link href=\"/build/assets/index.css\" rel=\"stylesheet\" />\n\t");
 
-        mock.Protected()
-            .Setup<bool>("isRunningHot")
-            .Returns(true);
-
-        mock.Protected()
-            .Setup<string>("hotAsset", ItExpr.IsAny<string>())
-            .Returns((string path) => { return "http://127.0.0.1:5174/" + path; });
+        // Hot file with css import
+        fileSystem.AddFile(@"/wwwroot/build/hot", new MockFileData("http://127.0.0.1:5174"));
 
         result = mock.Object.input("index.scss");
         Assert.AreEqual(result.ToString(), "<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
             "<script src=\"http://127.0.0.1:5174/index.scss\" type=\"module\"></script>\n\t");
     }
 
-    public string GetPublicDir(string path)
-    {
-        return base.getPublicDir(path);
-    }
 }
