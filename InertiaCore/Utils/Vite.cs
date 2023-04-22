@@ -118,7 +118,7 @@ internal class ViteBuilder : IViteBuilder
     {
         if (isRunningHot())
         {
-            return new HtmlString(makeModuleTag(hotAsset("@vite/client")) + makeModuleTag(hotAsset(path)));
+            return new HtmlString(makeModuleTag(asset("@vite/client")) + makeModuleTag(asset(path)));
         }
 
         if (!_fileSystem.File.Exists(getPublicPathForFile(manifestFilename)))
@@ -224,7 +224,7 @@ internal class ViteBuilder : IViteBuilder
         builder.Attributes.Add("type", "module");
 
         var inner = String.Format(
-            "import RefreshRuntime from '{0}';", hotAsset("@react-refresh")) +
+            "import RefreshRuntime from '{0}';", asset("@react-refresh")) +
             "RefreshRuntime.injectIntoGlobalHook(window);" +
             "window.$RefreshReg$ = () => { };" +
             "window.$RefreshSig$ = () => (type) => type;" +
