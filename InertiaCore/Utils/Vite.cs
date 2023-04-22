@@ -10,18 +10,17 @@ public interface IViteBuilder
 {
 
     public HtmlString reactRefresh();
+
     public HtmlString input(string path);
 
     public IViteBuilder useHotFile(string hotFile);
 
     public IViteBuilder useBuildDirectory(string? buildDirectory);
 
-
     public IViteBuilder useManifestFilename(string manifestFilename);
 
     public IViteBuilder usePublicDirectory(string publicDirectory);
 }
-
 
 internal class ViteBuilder : IViteBuilder
 {
@@ -232,7 +231,6 @@ internal class ViteBuilder : IViteBuilder
             "window.$RefreshSig$ = () => (type) => type;" +
             "window.__vite_plugin_react_preamble_installed__ = true;";
 
-
         builder.InnerHtml.AppendHtml(inner);
 
         return new HtmlString(GetString(builder));
@@ -245,7 +243,6 @@ internal class ViteBuilder : IViteBuilder
         var hotContents = _fileSystem.File.ReadAllText(hotFilePath);
 
         return hotContents + "/" + path;
-
     }
 
     // Get the URL for an asset.
@@ -327,4 +324,3 @@ public static class Vite
         ViteBuilder.setInstance(instance);
     }
 }
-
