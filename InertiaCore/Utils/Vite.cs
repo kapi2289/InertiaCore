@@ -18,7 +18,7 @@ public interface IViteBuilder
 
     public string? getBuildDirectory();
 
-    public void useBuildDirectory(string buildDirectory);
+    public void useBuildDirectory(string? buildDirectory);
 
     public string getManifestFilename();
 
