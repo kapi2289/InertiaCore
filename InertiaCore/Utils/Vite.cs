@@ -236,7 +236,7 @@ internal class ViteBuilder : IViteBuilder
     // Get the path to a given asset when running in HMR mode.
     protected string hotAsset(string path)
     {
-        var hotFilePath = getPublicPathForFile(hotFile);
+        var hotFilePath = getPublicPathForFile(getHotFile());
         var hotContents = _fileSystem.File.ReadAllText(hotFilePath);
 
         return hotContents + "/" + path;
@@ -262,7 +262,7 @@ internal class ViteBuilder : IViteBuilder
 
     protected bool isRunningHot()
     {
-        return _fileSystem.File.Exists(getPublicPathForFile("hot"));
+        return _fileSystem.File.Exists(getPublicPathForFile(getHotFile()));
     }
 
     protected string GetString(IHtmlContent content)
