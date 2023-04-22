@@ -48,6 +48,30 @@ public partial class Tests
     }
 
     [Test]
+    public void TestProperties()
+    {
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData> { });
+
+        var mock = new Mock<ViteBuilder>(fileSystem);
+
+        mock.Object.useBuildDirectory("build2");
+
+        Assert.That(mock.Object.getBuildDirectory(), Is.EqualTo("build2"));
+
+        mock.Object.usePublicDirectory("public");
+
+        Assert.That(mock.Object.getPublicDirectory(), Is.EqualTo("public"));
+
+        mock.Object.useManifestFilename("test.json");
+
+        Assert.That(mock.Object.getManifestFilename(), Is.EqualTo("test.json"));
+
+        mock.Object.useHotFile("cold");
+
+        Assert.That(mock.Object.getHotFile(), Is.EqualTo("cold"));
+    }
+
+    [Test]
     public void TestViteInput()
     {
 
