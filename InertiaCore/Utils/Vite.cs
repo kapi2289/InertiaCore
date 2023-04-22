@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 namespace InertiaCore.Utils;
 
 
-class ViteBuilder
+public class ViteBuilder
 {
     // The path to the "hot" file.
     public string hotFile = "hot";
@@ -35,7 +35,7 @@ class ViteBuilder
     }
 
     //  Get the public directory and build path.
-    protected string getPublicDir(string path)
+    protected virtual string getPublicDir(string path)
     {
         var pieces = new List<string>();
         pieces.Add(ViteBuilder.Instance.publicDirectory);
@@ -54,12 +54,12 @@ class ViteBuilder
             return new HtmlString(makeModuleTag(hotAsset("@vite/client")) + makeModuleTag(hotAsset(path)));
         }
 
-        if (!File.Exists(getPublicDir(manifestFilename)))
+        if (!exists(getPublicDir(manifestFilename)))
         {
             throw new Exception("Vite Manifest is missing. Run `npm run build` and try again.");
         }
 
-        var manifest = File.ReadAllText(getPublicDir(manifestFilename));
+        var manifest = readFile(getPublicDir(manifestFilename));
         var manifestJson = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(manifest);
 
         if (manifestJson == null)
@@ -120,7 +120,6 @@ class ViteBuilder
         return makeScriptTag(url);
     }
 
-
     // Generate a script tag for the given URL.
     protected string makeScriptTag(string filePath)
     {
@@ -171,17 +170,17 @@ class ViteBuilder
     }
 
     // Get the path to a given asset when running in HMR mode.
-    protected string hotAsset(string path)
+    protected virtual string hotAsset(string path)
     {
         var hotFilePath = getPublicDir(hotFile);
-        var hotContents = File.ReadAllText(hotFilePath);
+        var hotContents = readFile(hotFilePath);
 
         return hotContents + "/" + path;
 
     }
 
     // Get the URL for an asset.
-    protected string asset(string path)
+    public string asset(string path)
     {
         if (isRunningHot())
         {
@@ -197,9 +196,19 @@ class ViteBuilder
         return "/" + String.Join("/", pieces);
     }
 
-    protected bool isRunningHot()
+    protected virtual bool isRunningHot()
     {
-        return File.Exists(getPublicDir("hot"));
+        return exists(getPublicDir("hot"));
+    }
+
+    protected virtual string readFile(string path)
+    {
+        return File.ReadAllText(path);
+    }
+
+    protected virtual bool exists(string path)
+    {
+        return File.Exists(path);
     }
 
     protected string GetString(IHtmlContent content)
