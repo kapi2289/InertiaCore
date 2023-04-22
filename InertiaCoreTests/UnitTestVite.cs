@@ -109,12 +109,40 @@ public partial class Tests
         result = mock.Object.input("index.scss");
         Assert.That(result.ToString(), Is.EqualTo("<link href=\"/build/assets/index.css\" rel=\"stylesheet\" />\n\t"));
 
+        // Basic CSS file with custom builder dir
+        fileSystem.AddFile(@"/wwwroot/manifest.json", new MockFileData("{\"index.scss\": {\"file\": \"assets/index.css\"}}"));
+        mock.Object.useBuildDirectory(null);
+        result = mock.Object.input("index.scss");
+        Assert.That(result.ToString(), Is.EqualTo("<link href=\"/assets/index.css\" rel=\"stylesheet\" />\n\t"));
+
+
         // Hot file with css import
+        mock.Object.useBuildDirectory("build");
         fileSystem.AddFile(@"/wwwroot/build/hot", new MockFileData("http://127.0.0.1:5174"));
 
         result = mock.Object.input("index.scss");
         Assert.That(result.ToString(), Is.EqualTo("<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
            "<script src=\"http://127.0.0.1:5174/index.scss\" type=\"module\"></script>\n\t"));
+
+        // Test null build directory
+        fileSystem.AddFile(@"/wwwroot/hot", new MockFileData("http://127.0.0.1:5174"));
+        mock.Object.useBuildDirectory(null);
+        result = mock.Object.input("index.scss");
+        Assert.That(result.ToString(), Is.EqualTo("<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
+           "<script src=\"http://127.0.0.1:5174/index.scss\" type=\"module\"></script>\n\t"));
+
+        // Test empty build directory
+        mock.Object.useBuildDirectory("");
+        result = mock.Object.input("index.scss");
+        Assert.That(result.ToString(), Is.EqualTo("<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
+           "<script src=\"http://127.0.0.1:5174/index.scss\" type=\"module\"></script>\n\t"));
+
+        // Basic JS File via hot
+        // fileSystem.AddFile(@"/wwwroot/build/manifest.json", new MockFileData("{\"app.tsx\": {\"file\": \"assets/main-19038c6a.js\"}}"));
+
+        result = mock.Object.input("app.tsx");
+        Assert.That(result.ToString(), Is.EqualTo("<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
+            "<script src=\"http://127.0.0.1:5174/app.tsx\" type=\"module\"></script>\n\t"));
     }
 
 }
