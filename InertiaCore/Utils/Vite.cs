@@ -46,7 +46,7 @@ internal class ViteBuilder : IViteBuilder
 
     private readonly IFileSystem _fileSystem;
 
-    public static ViteBuilder? instance = null;
+    private static ViteBuilder? instance = null;
     public static ViteBuilder Instance
     {
         get
