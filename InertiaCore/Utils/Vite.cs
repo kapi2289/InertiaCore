@@ -6,20 +6,43 @@ using System.Text.RegularExpressions;
 using System.IO.Abstractions;
 namespace InertiaCore.Utils;
 
+public interface IViteBuilder
+{
 
-public class ViteBuilder
+    public HtmlString reactRefresh();
+    public HtmlString input(string path);
+
+    public string getHotFile();
+
+    public void useHotFile(string hotFile);
+
+    public string? getBuildDirectory();
+
+    public void useBuildDirectory(string buildDirectory);
+
+    public string getManifestFilename();
+
+    public void useManifestFilename(string manifestFilename);
+
+    public string getPublicDirectory();
+
+    public void usePublicDirectory(string publicDirectory);
+}
+
+
+internal class ViteBuilder : IViteBuilder
 {
     // The path to the "hot" file.
-    public string hotFile = "hot";
+    protected string hotFile = "hot";
 
     // The path to the build directory.
-    public string? buildDirectory = "build";
+    protected string? buildDirectory = "build";
 
     // The name of the manifest file.
-    public string manifestFilename = "manifest.json";
+    protected string manifestFilename = "manifest.json";
 
     // The path to the public directory.
-    public string publicDirectory = "wwwroot";
+    protected string publicDirectory = "wwwroot";
 
     private readonly IFileSystem _fileSystem;
 
@@ -35,6 +58,51 @@ public class ViteBuilder
     public ViteBuilder(IFileSystem fileSystem)
     {
         this._fileSystem = fileSystem;
+    }
+
+    public string getHotFile()
+    {
+        return this.hotFile;
+    }
+
+    public void useHotFile(string hotFile)
+    {
+        this.hotFile = hotFile;
+    }
+
+    public string? getBuildDirectory()
+    {
+        return this.buildDirectory;
+    }
+
+    public string getCurrentDirectory()
+    {
+        return this._fileSystem.Directory.GetCurrentDirectory();
+    }
+
+    public void useBuildDirectory(string? buildDirectory)
+    {
+        this.buildDirectory = buildDirectory;
+    }
+
+    public string getManifestFilename()
+    {
+        return this.manifestFilename;
+    }
+
+    public void useManifestFilename(string manifestFilename)
+    {
+        this.manifestFilename = manifestFilename;
+    }
+
+    public string getPublicDirectory()
+    {
+        return this.publicDirectory;
+    }
+
+    public void usePublicDirectory(string publicDirectory)
+    {
+        this.publicDirectory = publicDirectory;
     }
 
     //  Get the public directory and build path.
