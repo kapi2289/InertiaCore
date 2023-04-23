@@ -27,7 +27,9 @@ internal class ViteBuilder : IViteBuilder
         _fileSystem = fileSystem;
     }
 
-    //  Get the public directory and build path.
+    /// <summary>
+    /// Get the public directory and build path.
+    /// </summary>
     private string GetPublicPathForFile(string path)
     {
         var pieces = new List<string> { _options.Value.PublicDirectory };
@@ -40,6 +42,9 @@ internal class ViteBuilder : IViteBuilder
         return string.Join("/", pieces);
     }
 
+    /// <summary>
+    /// Generates various tags from a given input file path.
+    /// </summary>
     public HtmlString Input(string path)
     {
         if (IsRunningHot())
@@ -73,7 +78,10 @@ internal class ViteBuilder : IViteBuilder
             return new HtmlString(MakeTag(filePath.ToString()));
         }
 
-        // Handle JS and CSS combo
+        /// <remark>
+        /// Handle JS and CSS combo
+        /// </remark>
+
         var html = MakeTag(filePath.ToString());
 
         try
@@ -84,12 +92,17 @@ internal class ViteBuilder : IViteBuilder
         }
         catch (Exception)
         {
-            // ignored
+            /// <remark>
+            /// ignored
+            /// </remark>
         }
 
         return new HtmlString(html);
     }
 
+    /// <summary>
+    /// Generate script tag with type="module"
+    /// </summary>
     private static string MakeModuleTag(string path)
     {
         var builder = new TagBuilder("script");
@@ -99,13 +112,17 @@ internal class ViteBuilder : IViteBuilder
         return new HtmlString(GetString(builder)).Value + "\n\t";
     }
 
-    // Generate an appropriate tag for the given URL in HMR mode.
+    /// <summary>
+    /// Generate an appropriate tag for the given URL in HMR mode.
+    /// </summary>
     private string MakeTag(string url)
     {
         return IsCssPath(url) ? MakeStylesheetTag(url) : MakeScriptTag(url);
     }
 
-    // Generate a script tag for the given URL.
+    /// <summary>
+    /// Generate a script tag for the given URL.
+    /// </summary>
     private string MakeScriptTag(string filePath)
     {
         var builder = new TagBuilder("script");
@@ -114,7 +131,9 @@ internal class ViteBuilder : IViteBuilder
         return GetString(builder) + "\n\t";
     }
 
-    // Generate a stylesheet tag for the given URL in HMR mode.
+    /// <summary>
+    /// Generate a stylesheet tag for the given URL in HMR mode.
+    /// </summary>
     private string MakeStylesheetTag(string filePath)
     {
         var builder = new TagBuilder("link");
@@ -123,13 +142,17 @@ internal class ViteBuilder : IViteBuilder
         return GetString(builder).Replace("></link>", " />") + "\n\t";
     }
 
-    // Determine whether the given path is a CSS file.
+    /// <summary>
+    /// Determine whether the given path is a CSS file.
+    /// </summary>
     private static bool IsCssPath(string path)
     {
         return Regex.IsMatch(path, @".\.(css|less|sass|scss|styl|stylus|pcss|postcss)", RegexOptions.IgnoreCase);
     }
 
-    // Generate React refresh runtime script.
+    /// <summary>
+    /// Generate React refresh runtime script.
+    /// </summary>
     public HtmlString ReactRefresh()
     {
         if (!IsRunningHot())
@@ -151,7 +174,9 @@ internal class ViteBuilder : IViteBuilder
         return new HtmlString(GetString(builder));
     }
 
-    // Get the path to a given asset when running in HMR mode.
+    /// <summary>
+    /// Get the URL to a given asset when running in HMR mode.
+    /// </summary>
     private string HotAsset(string path)
     {
         var hotFilePath = GetPublicPathForFile(_options.Value.HotFile);
@@ -160,7 +185,9 @@ internal class ViteBuilder : IViteBuilder
         return hotContents + "/" + path;
     }
 
-    // Get the URL for an asset.
+    /// <summary>
+    /// Get the URL for an asset.
+    /// </summary>
     private string Asset(string path)
     {
         if (IsRunningHot())
@@ -178,11 +205,17 @@ internal class ViteBuilder : IViteBuilder
         return "/" + string.Join("/", pieces);
     }
 
+    /// <summary>
+    /// Determine if Vite is running in HMR mode.
+    /// </summary>
     private bool IsRunningHot()
     {
         return _fileSystem.File.Exists(GetPublicPathForFile(_options.Value.HotFile));
     }
 
+    /// <summary>
+    /// Convert an IHtmlContent to a string.
+    /// </summary>
     private static string GetString(IHtmlContent content)
     {
         var writer = new StringWriter();
@@ -197,9 +230,13 @@ public static class Vite
 
     internal static void UseBuilder(IViteBuilder instance) => _instance = instance;
 
-    // Generate tag(s) for the given input path.
+    /// <summary>
+    /// Generates various tags from a given input file path.
+    /// </summary>
     public static HtmlString Input(string path) => _instance.Input(path);
 
-    // Generate React refresh runtime script.
+    /// <summary>
+    /// Generate React refresh runtime script.
+    /// </summary>
     public static HtmlString ReactRefresh() => _instance.ReactRefresh();
 }
