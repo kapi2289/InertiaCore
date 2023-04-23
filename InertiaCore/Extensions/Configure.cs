@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.Net;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
@@ -16,6 +17,9 @@ public static class Configure
     {
         var factory = app.ApplicationServices.GetRequiredService<IResponseFactory>();
         Inertia.UseFactory(factory);
+
+        var viteBuilder = app.ApplicationServices.GetService<IViteBuilder>();
+        if (viteBuilder != null) Vite.UseBuilder(viteBuilder);
 
         app.Use(async (context, next) =>
         {
@@ -44,6 +48,15 @@ public static class Configure
 
         services.Configure<MvcOptions>(mvcOptions => { mvcOptions.Filters.Add<InertiaActionFilter>(); });
 
+        if (options != null) services.Configure(options);
+
+        return services;
+    }
+
+    public static IServiceCollection AddViteHelper(this IServiceCollection services,
+        Action<ViteOptions>? options = null)
+    {
+        services.AddSingleton<IViteBuilder, ViteBuilder>();
         if (options != null) services.Configure(options);
 
         return services;

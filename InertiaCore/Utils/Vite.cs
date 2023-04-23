@@ -4,130 +4,55 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text.RegularExpressions;
 using System.IO.Abstractions;
+using InertiaCore.Models;
+using Microsoft.Extensions.Options;
+
 namespace InertiaCore.Utils;
 
 public interface IViteBuilder
 {
-
-    public HtmlString reactRefresh();
-
-    public HtmlString input(string path);
-
-    public IViteBuilder useHotFile(string hotFile);
-
-    public IViteBuilder useBuildDirectory(string? buildDirectory);
-
-    public IViteBuilder useManifestFilename(string manifestFilename);
-
-    public IViteBuilder usePublicDirectory(string publicDirectory);
+    HtmlString ReactRefresh();
+    HtmlString Input(string path);
 }
 
 internal class ViteBuilder : IViteBuilder
 {
-    // The path to the "hot" file.
-    protected string hotFile = "hot";
+    private IFileSystem _fileSystem;
+    private readonly IOptions<ViteOptions> _options;
 
-    // The path to the build directory.
-    protected string? buildDirectory = "build";
+    public ViteBuilder(IOptions<ViteOptions> options) => (_fileSystem, _options) = (new FileSystem(), options);
 
-    // The name of the manifest file.
-    protected string manifestFilename = "manifest.json";
-
-    // The path to the public directory.
-    protected string publicDirectory = "wwwroot";
-
-    private readonly IFileSystem _fileSystem;
-
-    private static IViteBuilder? instance = null;
-    public static IViteBuilder Instance
+    protected internal void UseFileSystem(IFileSystem fileSystem)
     {
-        get
-        {
-            return instance ??= new ViteBuilder(new FileSystem());
-        }
-    }
-
-    public static void setInstance(IViteBuilder? newInstance)
-    {
-        instance = newInstance;
-    }
-
-    public ViteBuilder(IFileSystem fileSystem)
-    {
-        this._fileSystem = fileSystem;
-    }
-
-    public string getHotFile()
-    {
-        return this.hotFile;
-    }
-
-    public IViteBuilder useHotFile(string hotFile)
-    {
-        this.hotFile = hotFile;
-        return this;
-    }
-
-    public string? getBuildDirectory()
-    {
-        return this.buildDirectory;
-    }
-
-    public IViteBuilder useBuildDirectory(string? buildDirectory)
-    {
-        this.buildDirectory = buildDirectory;
-        return this;
-    }
-
-    public string getManifestFilename()
-    {
-        return this.manifestFilename;
-    }
-
-    public IViteBuilder useManifestFilename(string manifestFilename)
-    {
-        this.manifestFilename = manifestFilename;
-        return this;
-    }
-
-    public string getPublicDirectory()
-    {
-        return this.publicDirectory;
-    }
-
-    public IViteBuilder usePublicDirectory(string publicDirectory)
-    {
-        this.publicDirectory = publicDirectory;
-        return this;
+        _fileSystem = fileSystem;
     }
 
     //  Get the public directory and build path.
-    protected string getPublicPathForFile(string path)
+    private string GetPublicPathForFile(string path)
     {
-        var pieces = new List<string>();
-        pieces.Add(getPublicDirectory());
-        var buildDirectory = getBuildDirectory();
-        if (buildDirectory != null && buildDirectory != "")
+        var pieces = new List<string> { _options.Value.PublicDirectory };
+        if (!string.IsNullOrEmpty(_options.Value.BuildDirectory))
         {
-            pieces.Add(buildDirectory);
+            pieces.Add(_options.Value.BuildDirectory);
         }
+
         pieces.Add(path);
-        return String.Join("/", pieces);
+        return string.Join("/", pieces);
     }
 
-    public HtmlString input(string path)
+    public HtmlString Input(string path)
     {
-        if (isRunningHot())
+        if (IsRunningHot())
         {
-            return new HtmlString(makeModuleTag(asset("@vite/client")) + makeModuleTag(asset(path)));
+            return new HtmlString(MakeModuleTag(Asset("@vite/client")) + MakeModuleTag(Asset(path)));
         }
 
-        if (!_fileSystem.File.Exists(getPublicPathForFile(manifestFilename)))
+        if (!_fileSystem.File.Exists(GetPublicPathForFile(_options.Value.ManifestFilename)))
         {
             throw new Exception("Vite Manifest is missing. Run `npm run build` and try again.");
         }
 
-        var manifest = _fileSystem.File.ReadAllText(getPublicPathForFile(manifestFilename));
+        var manifest = _fileSystem.File.ReadAllText(GetPublicPathForFile(_options.Value.ManifestFilename));
         var manifestJson = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(manifest);
 
         if (manifestJson == null)
@@ -140,35 +65,32 @@ internal class ViteBuilder : IViteBuilder
             throw new Exception("Asset not found in manifest: " + path);
         }
 
-        JsonElement obj = manifestJson[path];
+        var obj = manifestJson[path];
         var filePath = obj.GetProperty("file");
 
-        if (isCssPath(filePath.ToString()))
+        if (IsCssPath(filePath.ToString()))
         {
-
-            return new HtmlString(makeTag(filePath.ToString()));
+            return new HtmlString(MakeTag(filePath.ToString()));
         }
 
         // Handle JS and CSS combo
-        var html = makeTag(filePath.ToString());
+        var html = MakeTag(filePath.ToString());
 
         try
         {
             var css = obj.GetProperty("css");
-            foreach (JsonElement item in css.EnumerateArray())
-            {
-                html = html + makeTag(item.ToString());
-            }
+            html = css.EnumerateArray().Aggregate(html,
+                (current, item) => current + MakeTag(item.ToString()));
         }
         catch (Exception)
         {
-
+            // ignored
         }
 
         return new HtmlString(html);
     }
 
-    protected string? makeModuleTag(string path)
+    private static string MakeModuleTag(string path)
     {
         var builder = new TagBuilder("script");
         builder.Attributes.Add("type", "module");
@@ -178,45 +100,39 @@ internal class ViteBuilder : IViteBuilder
     }
 
     // Generate an appropriate tag for the given URL in HMR mode.
-    protected string makeTag(string url)
+    private string MakeTag(string url)
     {
-        if (isCssPath(url))
-        {
-            return makeStylesheetTag(url);
-        }
-
-        return makeScriptTag(url);
+        return IsCssPath(url) ? MakeStylesheetTag(url) : MakeScriptTag(url);
     }
 
     // Generate a script tag for the given URL.
-    protected string makeScriptTag(string filePath)
+    private string MakeScriptTag(string filePath)
     {
         var builder = new TagBuilder("script");
         builder.Attributes.Add("type", "text/javascript");
-        builder.Attributes.Add("src", asset(filePath));
+        builder.Attributes.Add("src", Asset(filePath));
         return GetString(builder) + "\n\t";
     }
 
     // Generate a stylesheet tag for the given URL in HMR mode.
-    protected string makeStylesheetTag(string filePath)
+    private string MakeStylesheetTag(string filePath)
     {
         var builder = new TagBuilder("link");
         builder.Attributes.Add("rel", "stylesheet");
-        builder.Attributes.Add("href", asset(filePath));
+        builder.Attributes.Add("href", Asset(filePath));
         return GetString(builder).Replace("></link>", " />") + "\n\t";
     }
 
     // Determine whether the given path is a CSS file.
-    protected bool isCssPath(string path)
+    private static bool IsCssPath(string path)
     {
         return Regex.IsMatch(path, @".\.(css|less|sass|scss|styl|stylus|pcss|postcss)", RegexOptions.IgnoreCase);
     }
 
     // Generate React refresh runtime script.
-    public HtmlString reactRefresh()
+    public HtmlString ReactRefresh()
     {
-
-        if (!isRunningHot())
+        if (!IsRunningHot())
         {
             return new HtmlString("<!-- no hot -->");
         }
@@ -224,12 +140,11 @@ internal class ViteBuilder : IViteBuilder
         var builder = new TagBuilder("script");
         builder.Attributes.Add("type", "module");
 
-        var inner = String.Format(
-            "import RefreshRuntime from '{0}';", asset("@react-refresh")) +
-            "RefreshRuntime.injectIntoGlobalHook(window);" +
-            "window.$RefreshReg$ = () => { };" +
-            "window.$RefreshSig$ = () => (type) => type;" +
-            "window.__vite_plugin_react_preamble_installed__ = true;";
+        var inner = $"import RefreshRuntime from '{Asset("@react-refresh")}';" +
+                    "RefreshRuntime.injectIntoGlobalHook(window);" +
+                    "window.$RefreshReg$ = () => { };" +
+                    "window.$RefreshSig$ = () => (type) => type;" +
+                    "window.__vite_plugin_react_preamble_installed__ = true;";
 
         builder.InnerHtml.AppendHtml(inner);
 
@@ -237,39 +152,40 @@ internal class ViteBuilder : IViteBuilder
     }
 
     // Get the path to a given asset when running in HMR mode.
-    protected string hotAsset(string path)
+    private string HotAsset(string path)
     {
-        var hotFilePath = getPublicPathForFile(getHotFile());
+        var hotFilePath = GetPublicPathForFile(_options.Value.HotFile);
         var hotContents = _fileSystem.File.ReadAllText(hotFilePath);
 
         return hotContents + "/" + path;
     }
 
     // Get the URL for an asset.
-    protected string asset(string path)
+    private string Asset(string path)
     {
-        if (isRunningHot())
+        if (IsRunningHot())
         {
-            return hotAsset(path);
+            return HotAsset(path);
         }
 
         var pieces = new List<string>();
-        if (buildDirectory != null && buildDirectory != "")
+        if (!string.IsNullOrEmpty(_options.Value.BuildDirectory))
         {
-            pieces.Add(buildDirectory);
+            pieces.Add(_options.Value.BuildDirectory);
         }
+
         pieces.Add(path);
-        return "/" + String.Join("/", pieces);
+        return "/" + string.Join("/", pieces);
     }
 
-    protected bool isRunningHot()
+    private bool IsRunningHot()
     {
-        return _fileSystem.File.Exists(getPublicPathForFile(getHotFile()));
+        return _fileSystem.File.Exists(GetPublicPathForFile(_options.Value.HotFile));
     }
 
-    protected string GetString(IHtmlContent content)
+    private static string GetString(IHtmlContent content)
     {
-        var writer = new System.IO.StringWriter();
+        var writer = new StringWriter();
         content.WriteTo(writer, HtmlEncoder.Default);
         return writer.ToString();
     }
@@ -277,50 +193,13 @@ internal class ViteBuilder : IViteBuilder
 
 public static class Vite
 {
+    private static IViteBuilder _instance = default!;
 
-    // Set the filename for the manifest file.
-    public static IViteBuilder? useManifestFilename(string manifestFilename)
-    {
-        ViteBuilder.Instance.useManifestFilename(manifestFilename);
-        return ViteBuilder.Instance;
-    }
-
-    // Set the Vite "hot" file path.
-    public static IViteBuilder useHotFile(string hotFile)
-    {
-        ViteBuilder.Instance.useHotFile(hotFile);
-        return ViteBuilder.Instance;
-    }
-
-    //  Set the Vite build directory.
-    public static IViteBuilder useBuildDir(string? buildDirectory)
-    {
-        ViteBuilder.Instance.useBuildDirectory(buildDirectory);
-        return ViteBuilder.Instance;
-    }
-
-    //  Set the public directory.
-    public static IViteBuilder usePublicDir(string publicDirectory)
-    {
-        ViteBuilder.Instance.usePublicDirectory(publicDirectory);
-        return ViteBuilder.Instance;
-    }
+    internal static void UseBuilder(IViteBuilder instance) => _instance = instance;
 
     // Generate tag(s) for the given input path.
-    public static HtmlString input(string path)
-    {
-        return ViteBuilder.Instance.input(path);
-    }
+    public static HtmlString Input(string path) => _instance.Input(path);
 
     // Generate React refresh runtime script.
-    public static HtmlString reactRefresh()
-    {
-        return ViteBuilder.Instance.reactRefresh();
-    }
-
-    // Set the IViteBuilder instance.
-    public static void setInstance(IViteBuilder instance)
-    {
-        ViteBuilder.setInstance(instance);
-    }
+    public static HtmlString ReactRefresh() => _instance.ReactRefresh();
 }
