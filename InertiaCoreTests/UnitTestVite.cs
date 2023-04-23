@@ -32,6 +32,7 @@ public partial class Tests
     }
 
     [Test]
+    [Description("Test if the Vite Helper handles hot module reloading properly.")]
     public void TestHot()
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
@@ -57,6 +58,7 @@ public partial class Tests
     }
 
     [Test]
+    [Description("Test if the Vite Helper handles HMR disabled properly.")]
     public void TestNotHot()
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
@@ -70,6 +72,7 @@ public partial class Tests
     }
 
     [Test]
+    [Description("Test if the Vite Helper handles generating HTML tags for both JS and CSS from HMR and the manifest properly.")]
     public void TestViteInput()
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
@@ -168,6 +171,7 @@ public partial class Tests
     }
 
     [Test]
+    [Description("Test if the Vite Facade behaves correctly with different builder configurations.")]
     public void TestViteFacade()
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
