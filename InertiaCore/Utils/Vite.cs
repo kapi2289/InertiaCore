@@ -78,10 +78,6 @@ internal class ViteBuilder : IViteBuilder
             return new HtmlString(MakeTag(filePath.ToString()));
         }
 
-        /// <remark>
-        /// Handle JS and CSS combo
-        /// </remark>
-
         var html = MakeTag(filePath.ToString());
 
         try
@@ -92,9 +88,7 @@ internal class ViteBuilder : IViteBuilder
         }
         catch (Exception)
         {
-            /// <remark>
-            /// ignored
-            /// </remark>
+            // ignored
         }
 
         return new HtmlString(html);
