@@ -17,15 +17,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="TypeMerger" Version="2.1.1"/>
+        <PackageReference Include="System.IO.Abstractions" Version="19.2.16" />
+        <PackageReference Include="TypeMerger" Version="2.1.1" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="../LICENSE" Pack="true" PackagePath=""/>
-        <None Include="../README.md" Pack="true" PackagePath=""/>
+        <None Include="../LICENSE" Pack="true" PackagePath="" />
+        <None Include="../README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
     </ItemGroup>
 </Project>
