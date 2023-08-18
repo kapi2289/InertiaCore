@@ -101,7 +101,7 @@ public partial class Tests
 
         var result = mock.Object.Input("app.tsx");
         Assert.That(result.ToString(),
-            Is.EqualTo("<script src=\"/build/assets/main-19038c6a.js\" type=\"text/javascript\"></script>\n\t"));
+            Is.EqualTo("<script src=\"/build/assets/main-19038c6a.js\" type=\"module\"></script>\n\t"));
 
         // Basic JS File with CSS import
         fileSystem.AddFile(@"/wwwroot/build/manifest.json",
@@ -110,7 +110,7 @@ public partial class Tests
         result = mock.Object.Input("app.tsx");
         Assert.That(result.ToString(),
             Is.EqualTo(
-                "<script src=\"/build/assets/main.js\" type=\"text/javascript\"></script>\n\t<link href=\"/build/assets/index.css\" rel=\"stylesheet\" />\n\t"));
+                "<script src=\"/build/assets/main.js\" type=\"module\"></script>\n\t<link href=\"/build/assets/index.css\" rel=\"stylesheet\" />\n\t"));
 
         // Basic CSS file
         fileSystem.AddFile(@"/wwwroot/build/manifest.json",

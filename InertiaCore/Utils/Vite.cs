@@ -49,7 +49,7 @@ internal class ViteBuilder : IViteBuilder
     {
         if (IsRunningHot())
         {
-            return new HtmlString(MakeModuleTag(Asset("@vite/client")) + MakeModuleTag(Asset(path)));
+            return new HtmlString(MakeModuleTag("@vite/client").Value + MakeModuleTag(path).Value);
         }
 
         if (!_fileSystem.File.Exists(GetPublicPathForFile(_options.Value.ManifestFilename)))
@@ -75,7 +75,7 @@ internal class ViteBuilder : IViteBuilder
 
         if (IsCssPath(filePath.ToString()))
         {
-            return new HtmlString(MakeTag(filePath.ToString()));
+            return MakeTag(filePath.ToString());
         }
 
         var html = MakeTag(filePath.ToString());
@@ -83,57 +83,46 @@ internal class ViteBuilder : IViteBuilder
         try
         {
             var css = obj.GetProperty("css");
-            html = css.EnumerateArray().Aggregate(html,
-                (current, item) => current + MakeTag(item.ToString()));
+            return css.EnumerateArray().Aggregate(html,
+                (current, item) => new HtmlString(current.Value + MakeTag(item.ToString()).Value));
         }
         catch (Exception)
         {
             // ignored
         }
 
-        return new HtmlString(html);
+        return html;
     }
 
     /// <summary>
     /// Generate script tag with type="module"
     /// </summary>
-    private static string MakeModuleTag(string path)
+    private HtmlString MakeModuleTag(string path)
     {
         var builder = new TagBuilder("script");
         builder.Attributes.Add("type", "module");
-        builder.Attributes.Add("src", path);
+        builder.Attributes.Add("src", Asset(path));
 
-        return new HtmlString(GetString(builder)).Value + "\n\t";
+        return new HtmlString(GetString(builder) + "\n\t");
     }
 
     /// <summary>
     /// Generate an appropriate tag for the given URL in HMR mode.
     /// </summary>
-    private string MakeTag(string url)
+    private HtmlString MakeTag(string url)
     {
-        return IsCssPath(url) ? MakeStylesheetTag(url) : MakeScriptTag(url);
-    }
-
-    /// <summary>
-    /// Generate a script tag for the given URL.
-    /// </summary>
-    private string MakeScriptTag(string filePath)
-    {
-        var builder = new TagBuilder("script");
-        builder.Attributes.Add("type", "text/javascript");
-        builder.Attributes.Add("src", Asset(filePath));
-        return GetString(builder) + "\n\t";
+        return IsCssPath(url) ? MakeStylesheetTag(url) : MakeModuleTag(url);
     }
 
     /// <summary>
     /// Generate a stylesheet tag for the given URL in HMR mode.
     /// </summary>
-    private string MakeStylesheetTag(string filePath)
+    private HtmlString MakeStylesheetTag(string filePath)
     {
         var builder = new TagBuilder("link");
         builder.Attributes.Add("rel", "stylesheet");
         builder.Attributes.Add("href", Asset(filePath));
-        return GetString(builder).Replace("></link>", " />") + "\n\t";
+        return new HtmlString(GetString(builder).Replace("></link>", " />") + "\n\t");
     }
 
     /// <summary>
