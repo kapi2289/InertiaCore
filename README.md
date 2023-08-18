@@ -17,6 +17,7 @@ and its usage is more similar to the official adapters'.
 - [x] Better shared data integration.
 - [x] Props and shared props are merged instead of being separated.
 - [x] Server-side rendering support.
+- [x] Vite helper, thanks to [@adrum](https://www.github.com/adrum).
 - [x] Cycle-safe model with relations data serialization.
 - [x] Fixed **PATCH**, **PUT**, **DELETE** redirection not working properly.
 
@@ -235,7 +236,7 @@ import laravel from "laravel-vite-plugin";
 import path from "path";
 import { mkdirSync } from "fs";
 
-// Auto-initialize the default output directory
+// Auto-initialize the default output directory
 const outDir = "../wwwroot/build";
 
 mkdirSync(outDir, { recursive: true });

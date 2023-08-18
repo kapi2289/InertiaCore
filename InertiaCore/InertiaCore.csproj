@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>0.0.7</Version>
+        <Version>0.0.8</Version>
         <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
         <PackageId>AspNetCore.InertiaCore</PackageId>
         <Authors>kapi2289</Authors>
