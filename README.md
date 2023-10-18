@@ -21,6 +21,27 @@ and its usage is more similar to the official adapters'.
 - [x] Cycle-safe model with relations data serialization.
 - [x] Fixed **PATCH**, **PUT**, **DELETE** redirection not working properly.
 
+## Table of contents
+
+- [Examples](#examples)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Usage](#usage)
+  * [Frontend](#frontend)
+  * [Backend](#backend)
+- [Features](#features)
+  * [Shared data](#shared-data)
+  * [Server-side rendering](#server-side-rendering)
+  * [Vite helper](#vite-helper)
+    - [Examples](#examples-1)
+
+## Examples
+
+You can check out these examples to have some starting point for your new application.
+
+- **Vue** - [NejcBW/InertiaCoreVueTemplate](https://github.com/NejcBW/InertiaCoreVueTemplate)
+- **React** - [nicksoftware/React-AspnetCore-inertiaJS](https://github.com/nicksoftware/React-AspnetCore-inertiaJS)
+
 ## Installation
 
 1. Using Package Manager: `PM> Install-Package AspNetCore.InertiaCore`
