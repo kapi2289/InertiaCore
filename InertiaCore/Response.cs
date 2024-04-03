@@ -52,13 +52,21 @@ public class Response : IActionResult
         else
         {
             var props = _props.GetType().GetProperties()
-                .Where(o => o.PropertyType != typeof(LazyProp))
+                .Where(o => o.PropertyType != typeof(LazyProp) && o.PropertyType != typeof(DeferProp))
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
             page.Props = props;
+
+
+            var _deferProps = _props.GetType().GetProperties()
+                .Where(o => o.PropertyType == typeof(DeferProp))
+                .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
+
+            if (_deferProps != null) page.DeferProps = PrepareProps(_deferProps);
         }
 
         page.Props = PrepareProps(page.Props);
+
 
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
