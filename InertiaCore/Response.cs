@@ -57,16 +57,14 @@ public class Response : IActionResult
 
             page.Props = props;
 
-
-            var _deferProps = _props.GetType().GetProperties()
+            var deferProps = _props.GetType().GetProperties()
                 .Where(o => o.PropertyType == typeof(DeferProp))
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
-            if (_deferProps != null) page.DeferProps = PrepareProps(_deferProps);
+            page.DeferProps = PrepareProps(deferProps);
         }
 
         page.Props = PrepareProps(page.Props);
-
 
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
