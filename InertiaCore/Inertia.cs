@@ -29,4 +29,5 @@ public static class Inertia
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
 
     public static ILazyProp Lazy(Func<object?> callback) => _factory.Lazy(callback);
+    public static DeferProp Defer(Func<object?> callback) => _factory.Defer(callback);
 }

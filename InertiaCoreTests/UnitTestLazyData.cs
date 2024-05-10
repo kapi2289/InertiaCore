@@ -105,7 +105,7 @@ public partial class Tests
     [Description("Test if the lazy async data is fetched properly with specified partial props.")]
     public void TestLazyAsyncPartialData()
     {
-        var testFunction = new Func<Task<object?>>(async () =>
+        var testFunction = new Func<Task<string>>(async () =>
         {
             await Task.Delay(100);
             return "Lazy Async";
@@ -114,7 +114,7 @@ public partial class Tests
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.LazyAsync(testFunction)
+            TestLazy = _factory.LazyAsync(async () => await testFunction())
         });
 
         var headers = new HeaderDictionary
