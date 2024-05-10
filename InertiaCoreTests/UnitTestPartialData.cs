@@ -22,6 +22,11 @@ public partial class Tests
             {
                 Assert.Fail();
                 return "Lazy";
+            }),
+            TestDefer = _factory.Defer(() =>
+            {
+                Assert.Fail();
+                return "Defer";
             })
         });
 
