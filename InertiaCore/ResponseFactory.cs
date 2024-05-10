@@ -21,7 +21,8 @@ internal interface IResponseFactory
     public LocationResult Location(string url);
     public void Share(string key, object? value);
     public void Share(IDictionary<string, object?> data);
-    public LazyProp Lazy(Func<object?> callback);
+    public ILazyProp Lazy(Func<object?> callback);
+    public ILazyProp LazyAsync(Func<Task<object?>> callback);
 }
 
 internal class ResponseFactory : IResponseFactory
@@ -118,5 +119,6 @@ internal class ResponseFactory : IResponseFactory
         context.Features.Set(sharedData);
     }
 
-    public LazyProp Lazy(Func<object?> callback) => new(callback);
+    public ILazyProp Lazy(Func<object?> callback) => new LazyProp(callback);
+    public ILazyProp LazyAsync(Func<Task<object?>> callback) => new LazyPropAsync(callback);
 }

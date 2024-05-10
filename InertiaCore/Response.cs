@@ -52,7 +52,7 @@ public class Response : IActionResult
         else
         {
             var props = _props.GetType().GetProperties()
-                .Where(o => o.PropertyType != typeof(LazyProp))
+                .Where(o => o.PropertyType != typeof(ILazyProp))
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
             page.Props = props;
@@ -74,7 +74,7 @@ public class Response : IActionResult
         return props.ToDictionary(pair => pair.Key, pair => pair.Value switch
         {
             Func<object?> f => f.Invoke(),
-            LazyProp l => l.Invoke(),
+            ILazyProp l => l.Invoke(),
             _ => pair.Value
         });
     }
