@@ -52,7 +52,7 @@ public class Response : IActionResult
         else
         {
             var props = _props.GetType().GetProperties()
-                .Where(o => o.PropertyType != typeof(ILazyProp))
+                .Where(o => o.PropertyType != typeof(ILazyProp) && o.PropertyType != typeof(DeferProp))
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
             page.Props = props;
