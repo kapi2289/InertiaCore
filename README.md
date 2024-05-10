@@ -29,6 +29,7 @@ and its usage is more similar to the official adapters'.
 - [Usage](#usage)
   * [Frontend](#frontend)
   * [Backend](#backend)
+  * [Async Lazy Props](#async-lazy-props)
 - [Features](#features)
   * [Shared data](#shared-data)
   * [Server-side rendering](#server-side-rendering)
@@ -133,6 +134,29 @@ JSON.
     }
 ```
 
+
+### Async Lazy Props
+
+You can use async lazy props to load data asynchronously in your components. This is useful for loading data that is not needed for the initial render of the page.
+```csharp
+
+// simply use the LazyProps the same way you normally would, except call LazyPropAsync
+
+    public async Task<IActionResult> Index()
+    {
+        var posts = new LazyPropAsync(async () => _context.Posts.ToListAsync());
+        
+        var data = new
+        {
+            Posts = posts,
+        };
+        
+        return Inertia.Render("Posts", data);
+    }
+
+
+```
+
 ## Features
 
 ### Shared data
@@ -223,6 +247,7 @@ builder.Services.AddViteHelper(options =>
     options.ManifestFilename = "manifest.json";
 });
 ```
+
 
 #### Examples
 ---
