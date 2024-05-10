@@ -56,6 +56,12 @@ public class Response : IActionResult
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
             page.Props = props;
+
+            var deferProps = _props.GetType().GetProperties()
+                .Where(o => o.PropertyType == typeof(DeferProp))
+                .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
+
+            page.DeferProps = PrepareProps(deferProps);
         }
 
         page.Props = PrepareProps(page.Props);
