@@ -140,11 +140,11 @@ JSON.
 You can use async lazy props to load data asynchronously in your components. This is useful for loading data that is not needed for the initial render of the page.
 ```csharp
 
-// simply use the LazyProps the same way you normally would, except call LazyPropAsync
+// simply use the LazyProps the same way you normally would, except pass in an async function
 
     public async Task<IActionResult> Index()
     {
-        var posts = new LazyPropAsync(async () => await _context.Posts.ToListAsync());
+        var posts = new LazyProp(async () => await _context.Posts.ToListAsync());
         
         var data = new
         {
