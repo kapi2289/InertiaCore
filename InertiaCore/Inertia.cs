@@ -1,6 +1,6 @@
-﻿using System.Runtime.CompilerServices;
-using InertiaCore.Utils;
+﻿using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
+using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("InertiaCoreTests")]
 
@@ -28,6 +28,6 @@ public static class Inertia
 
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
 
-    public static ILazyProp Lazy(Func<object?> callback) => _factory.Lazy(callback);
+    public static LazyProp Lazy(Func<object?> callback) => _factory.Lazy(callback);
     public static DeferProp Defer(Func<object?> callback) => _factory.Defer(callback);
 }

@@ -1,13 +1,12 @@
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using System.Net;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InertiaCore;
 
@@ -21,8 +20,8 @@ internal interface IResponseFactory
     public LocationResult Location(string url);
     public void Share(string key, object? value);
     public void Share(IDictionary<string, object?> data);
-    public ILazyProp Lazy(Func<object?> callback);
-    public ILazyProp LazyAsync(Func<Task<object?>> callback);
+    public LazyProp Lazy(Func<object?> callback);
+    public LazyProp Lazy(Func<Task<object?>> callback);
     public DeferProp Defer(Func<object?> callback);
 }
 
@@ -120,8 +119,8 @@ internal class ResponseFactory : IResponseFactory
         context.Features.Set(sharedData);
     }
 
-    public ILazyProp Lazy(Func<object?> callback) => new LazyProp(callback);
-    public ILazyProp LazyAsync(Func<Task<object?>> callback) => new LazyPropAsync(callback);
+    public LazyProp Lazy(Func<object?> callback) => new LazyProp(callback);
+    public LazyProp Lazy(Func<Task<object?>> callback) => new LazyProp(callback);
 
     public DeferProp Defer(Func<object?> callback) => new(callback);
 }

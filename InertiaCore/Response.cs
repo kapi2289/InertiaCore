@@ -1,11 +1,11 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InertiaCore;
 
@@ -52,7 +52,7 @@ public class Response : IActionResult
         else
         {
             var props = _props.GetType().GetProperties()
-                .Where(o => o.PropertyType != typeof(ILazyProp) && o.PropertyType != typeof(DeferProp))
+                .Where(o => o.PropertyType != typeof(LazyProp) && o.PropertyType != typeof(DeferProp))
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
             page.Props = props;
@@ -80,7 +80,7 @@ public class Response : IActionResult
         return props.ToDictionary(pair => pair.Key, pair => pair.Value switch
         {
             Func<object?> f => f.Invoke(),
-            ILazyProp l => l.Invoke(),
+            LazyProp l => l.Invoke(),
             _ => pair.Value
         });
     }

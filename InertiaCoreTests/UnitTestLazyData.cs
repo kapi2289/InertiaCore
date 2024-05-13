@@ -1,6 +1,5 @@
 using InertiaCore.Models;
 using Microsoft.AspNetCore.Http;
-using System.Reflection.Metadata.Ecma335;
 
 namespace InertiaCoreTests;
 
@@ -83,7 +82,7 @@ public partial class Tests
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.LazyAsync(testFunction)
+            TestLazy = _factory.Lazy(testFunction)
         });
 
         var context = PrepareContext();
@@ -114,7 +113,7 @@ public partial class Tests
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.LazyAsync(async () => await testFunction())
+            TestLazy = _factory.Lazy(async () => await testFunction())
         });
 
         var headers = new HeaderDictionary
