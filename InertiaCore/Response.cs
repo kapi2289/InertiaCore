@@ -1,11 +1,11 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace InertiaCore;
 

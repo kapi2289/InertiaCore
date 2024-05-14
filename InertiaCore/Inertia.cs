@@ -1,6 +1,6 @@
-﻿using InertiaCore.Utils;
+﻿using System.Runtime.CompilerServices;
+using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
-using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("InertiaCoreTests")]
 

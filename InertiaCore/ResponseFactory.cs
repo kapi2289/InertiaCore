@@ -1,12 +1,13 @@
+using System.Net;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace InertiaCore;
 
