@@ -16,6 +16,7 @@ public class LocationResult : IActionResult
         {
             context.HttpContext.Response.Headers.Add("X-Inertia-Location", _url);
             await new StatusCodeResult((int)HttpStatusCode.Conflict).ExecuteResultAsync(context);
+            return;
         }
 
         await new RedirectResult(_url).ExecuteResultAsync(context);
