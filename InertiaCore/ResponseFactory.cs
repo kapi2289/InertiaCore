@@ -23,7 +23,6 @@ internal interface IResponseFactory
     public void Share(IDictionary<string, object?> data);
     public LazyProp Lazy(Func<object?> callback);
     public LazyProp Lazy(Func<Task<object?>> callback);
-    public DeferProp Defer(Func<object?> callback);
 }
 
 internal class ResponseFactory : IResponseFactory
@@ -122,6 +121,4 @@ internal class ResponseFactory : IResponseFactory
 
     public LazyProp Lazy(Func<object?> callback) => new LazyProp(callback);
     public LazyProp Lazy(Func<Task<object?>> callback) => new LazyProp(callback);
-
-    public DeferProp Defer(Func<object?> callback) => new(callback);
 }
