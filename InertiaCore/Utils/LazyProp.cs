@@ -2,9 +2,12 @@ namespace InertiaCore.Utils;
 
 public class LazyProp
 {
-    private readonly Func<object?> _callback;
+    private readonly Func<Task<object?>> _callback;
 
-    public LazyProp(Func<object?> callback) => _callback = callback;
+    public LazyProp(Func<object?> callback) => _callback = async () => await Task.FromResult(callback());
 
-    public object? Invoke() => _callback.Invoke();
+    public LazyProp(Func<Task<object?>> callback) => _callback = callback;
+
+
+    public object? Invoke() => Task.Run(() => _callback.Invoke()).GetAwaiter().GetResult();
 }
