@@ -64,7 +64,7 @@ public static class Configure
 
     private static async Task OnVersionChange(HttpContext context, IApplicationBuilder app)
     {
-        var tempData = app.ApplicationServices.GetRequiredService<TempDataDictionaryFactory>()
+        var tempData = app.ApplicationServices.GetRequiredService<ITempDataDictionaryFactory>()
             .GetTempData(context);
 
         if (tempData.Any()) tempData.Keep();
