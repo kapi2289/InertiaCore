@@ -31,6 +31,7 @@ and its usage is more similar to the official adapters'.
   * [Backend](#backend)
 - [Features](#features)
   * [Shared data](#shared-data)
+  * [Async Lazy Props](#async-lazy-props)
   * [Server-side rendering](#server-side-rendering)
   * [Vite helper](#vite-helper)
     - [Examples](#examples-1)
@@ -165,6 +166,28 @@ app.Use(async (context, next) =>
 });
 ```
 
+### Async Lazy Props
+
+You can use async lazy props to load data asynchronously in your components. This is useful for loading data that is not needed for the initial render of the page.
+```csharp
+
+// simply use the LazyProps the same way you normally would, except pass in an async function
+
+    public async Task<IActionResult> Index()
+    {
+        var posts = new LazyProp(async () => await _context.Posts.ToListAsync());
+        
+        var data = new
+        {
+            Posts = posts,
+        };
+        
+        return Inertia.Render("Posts", data);
+    }
+
+
+```
+
 ### Server-side rendering
 
 If you want to enable SSR in your Inertia app, remember to add `Inertia.Head()` to your layout:
@@ -223,6 +246,7 @@ builder.Services.AddViteHelper(options =>
     options.ManifestFilename = "manifest.json";
 });
 ```
+
 
 #### Examples
 ---
