@@ -5,21 +5,15 @@
 [![NuGet](https://img.shields.io/nuget/dt/AspNetCore.InertiaCore?style=flat-square)](https://www.nuget.org/packages/AspNetCore.InertiaCore)
 [![License](https://img.shields.io/github/license/kapi2289/InertiaCore?style=flat-square)](https://github.com/kapi2289/InertiaCore/blob/main/LICENSE)
 
-## Attribution
-
-This library is heavily inspired
-by [Nothing-Works/inertia-aspnetcore](https://github.com/Nothing-Works/inertia-aspnetcore), but it has some errors fixed
-and its usage is more similar to the official adapters'.
-
-## What was added
+## Features
 
 - [x] Validation error handling.
-- [x] Better shared data integration.
-- [x] Props and shared props are merged instead of being separated.
-- [x] Server-side rendering support.
-- [x] Vite helper, thanks to [@adrum](https://www.github.com/adrum).
+- [x] Shared data.
+- [x] Partial and async lazy props.
+- [x] Server-side rendering.
+- [x] Vite helper.
 - [x] Cycle-safe model with relations data serialization.
-- [x] Fixed **PATCH**, **PUT**, **DELETE** redirection not working properly.
+- [x] Properly working **PATCH**, **PUT** and **DELETE** redirections.
 
 ## Table of contents
 
