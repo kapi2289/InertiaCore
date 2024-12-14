@@ -21,6 +21,9 @@ internal interface IResponseFactory
     public LocationResult Location(string url);
     public void Share(string key, object? value);
     public void Share(IDictionary<string, object?> data);
+    public AlwaysProp Always(object? value);
+    public AlwaysProp Always(Func<object?> callback);
+    public AlwaysProp Always(Func<Task<object?>> callback);
     public LazyProp Lazy(Func<object?> callback);
     public LazyProp Lazy(Func<Task<object?>> callback);
 }
@@ -121,4 +124,7 @@ internal class ResponseFactory : IResponseFactory
 
     public LazyProp Lazy(Func<object?> callback) => new LazyProp(callback);
     public LazyProp Lazy(Func<Task<object?>> callback) => new LazyProp(callback);
+    public AlwaysProp Always(object? value) => new AlwaysProp(value);
+    public AlwaysProp Always(Func<object?> callback) => new AlwaysProp(callback);
+    public AlwaysProp Always(Func<Task<object?>> callback) => new AlwaysProp(callback);
 }

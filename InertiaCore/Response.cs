@@ -56,6 +56,7 @@ public class Response : IActionResult
         {
             Func<object?> f => f.Invoke(),
             LazyProp l => l.Invoke(),
+            AlwaysProp l => l.Invoke(),
             _ => pair.Value
         });
     }
@@ -130,6 +131,8 @@ public class Response : IActionResult
             props = ResolveExcept(props);
         }
 
+        props = ResolveAlways(props);
+
         props = PrepareProps(props);
 
         return props;
@@ -143,5 +146,16 @@ public class Response : IActionResult
     private Dictionary<string, object?> ResolveExcept(Dictionary<string, object?> props)
     {
         return _context!.ExceptProps(props);
+    }
+
+    private Dictionary<string, object?> ResolveAlways(Dictionary<string, object?> props)
+    {
+        var alwaysProps = _props.GetType().GetProperties()
+                        .Where(o => o.PropertyType == typeof(AlwaysProp))
+                        .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)); ;
+
+        return props
+            .Where(kv => kv.Value is not AlwaysProp)
+            .Concat(alwaysProps).ToDictionary(kv => kv.Key, kv => kv.Value);
     }
 }
