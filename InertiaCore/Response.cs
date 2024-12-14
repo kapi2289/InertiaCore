@@ -37,28 +37,9 @@ public class Response : IActionResult
         {
             Component = _component,
             Version = _version,
-            Url = _context!.RequestedUri()
+            Url = _context!.RequestedUri(),
+            Props = ResolveProperties(_props.GetType().GetProperties().ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)))
         };
-
-        var partial = _context!.GetPartialData();
-        if (partial.Any() && _context!.IsInertiaPartialComponent(_component))
-        {
-            var only = _props.Only(partial);
-            var partialProps = only.ToDictionary(o => o.ToCamelCase(), o =>
-                _props.GetType().GetProperty(o)?.GetValue(_props));
-
-            page.Props = partialProps;
-        }
-        else
-        {
-            var props = _props.GetType().GetProperties()
-                .Where(o => o.PropertyType != typeof(LazyProp))
-                .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
-
-            page.Props = props;
-        }
-
-        page.Props = PrepareProps(page.Props);
 
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
@@ -126,5 +107,41 @@ public class Response : IActionResult
     {
         _viewData = viewData;
         return this;
+    }
+
+    private Dictionary<string, object?> ResolveProperties(Dictionary<string, object?> props)
+    {
+        bool isPartial = _context!.IsInertiaPartialComponent(_component);
+
+        if (!isPartial)
+        {
+            props = props
+                .Where(kv => kv.Value is not LazyProp)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+        }
+
+        if (isPartial && _context!.HttpContext.Request.Headers.ContainsKey(Header.PartialOnly))
+        {
+            props = ResolveOnly(props);
+        }
+
+        if (isPartial && _context!.HttpContext.Request.Headers.ContainsKey(Header.PartialExcept))
+        {
+            props = ResolveExcept(props);
+        }
+
+        props = PrepareProps(props);
+
+        return props;
+    }
+
+    private Dictionary<string, object?> ResolveOnly(Dictionary<string, object?> props)
+    {
+        return _context!.OnlyProps(props);
+    }
+
+    private Dictionary<string, object?> ResolveExcept(Dictionary<string, object?> props)
+    {
+        return _context!.ExceptProps(props);
     }
 }
