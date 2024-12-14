@@ -25,7 +25,7 @@ public static class Configure
         {
             if (context.IsInertiaRequest()
                 && context.Request.Method == "GET"
-                && context.Request.Headers["X-Inertia-Version"] != Inertia.GetVersion())
+                && context.Request.Headers[Header.Version] != Inertia.GetVersion())
             {
                 await OnVersionChange(context, app);
                 return;
@@ -69,7 +69,7 @@ public static class Configure
 
         if (tempData.Any()) tempData.Keep();
 
-        context.Response.Headers.Add("X-Inertia-Location", context.RequestedUri());
+        context.Response.Headers.Add(Header.Location, context.RequestedUri());
         context.Response.StatusCode = (int)HttpStatusCode.Conflict;
 
         await context.Response.CompleteAsync();

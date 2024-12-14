@@ -81,7 +81,7 @@ public class Response : IActionResult
 
     protected internal JsonResult GetJson()
     {
-        _context!.HttpContext.Response.Headers.Add("X-Inertia", "true");
+        _context!.HttpContext.Response.Headers.Add(Header.Inertia, "true");
         _context!.HttpContext.Response.Headers.Add("Vary", "Accept");
         _context!.HttpContext.Response.StatusCode = 200;
 
