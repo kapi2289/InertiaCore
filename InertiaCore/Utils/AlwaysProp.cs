@@ -12,11 +12,16 @@ public class AlwaysProp
     public object? Invoke()
     {
         // Check if the value is a callable delegate
-        return Task.Run(() =>
+        return Task.Run(async () =>
            {
-               if (_value is Delegate callable)
+               if (_value is Func<Task<object?>> asyncCallable)
                {
-                   return callable.DynamicInvoke();
+                   return await asyncCallable.Invoke();
+               }
+
+               if (_value is Func<object?> callable)
+               {
+                   return callable.Invoke();
                }
 
                return _value;
