@@ -50,8 +50,8 @@ public partial class Tests
             Assert.That(dictionary!.ContainsKey("MergeProps"), Is.False);
         });
     }
-    [
-        Test]
+
+    [Test]
     [Description("Test if the JSON result with merged data is created correctly.")]
     public void TestJsonMergedResult()
     {
