@@ -2,10 +2,27 @@ namespace InertiaCore.Utils;
 
 public class LazyProp : IgnoreFirstLoad
 {
-    private readonly Func<Task<object?>> _callback;
+    private readonly object? _value;
 
-    public LazyProp(Func<object?> callback) => _callback = async () => await Task.FromResult(callback());
-    public LazyProp(Func<Task<object?>> callback) => _callback = callback;
+    public LazyProp(Func<object?> callback) => _value = callback;
+    public LazyProp(Func<Task<object?>> callback) => _value = callback;
 
-    public object? Invoke() => Task.Run(() => _callback.Invoke()).GetAwaiter().GetResult();
+    public object? Invoke()
+    {
+        // Check if the value is a callable delegate
+        return Task.Run(async () =>
+           {
+               if (_value is Func<Task<object?>> asyncCallable)
+               {
+                   return await asyncCallable.Invoke();
+               }
+
+               if (_value is Func<object?> callable)
+               {
+                   return callable.Invoke();
+               }
+
+               return _value;
+           }).GetAwaiter().GetResult();
+    }
 }
