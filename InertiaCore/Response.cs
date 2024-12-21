@@ -42,6 +42,7 @@ public class Response : IActionResult
         };
 
         page.MergeProps = ResolveMergeProps(page.Props);
+        page.DeferredProps = ResolveDeferredProps(page.Props);
 
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
@@ -58,9 +59,10 @@ public class Response : IActionResult
         {
             Func<object?> f => f.Invoke(),
             LazyProp l => l.Invoke(),
-            OptionalProp l => l.Invoke(),
-            AlwaysProp l => l.Invoke(),
+            OptionalProp o => o.Invoke(),
+            AlwaysProp a => a.Invoke(),
             MergeProp m => m.Invoke(),
+            DeferProp d => d.Invoke(),
             _ => pair.Value
         });
     }
@@ -193,5 +195,37 @@ public class Response : IActionResult
 
         // Return the result
         return mergeProps;
+    }
+
+    private Dictionary<string, List<string>>? ResolveDeferredProps(Dictionary<string, object?> props)
+    {
+
+        bool isPartial = _context!.IsInertiaPartialComponent(_component);
+        if (isPartial)
+        {
+            return null;
+        }
+
+        var deferredProps = _props.GetType().GetProperties().ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props))
+            .Where(kv => kv.Value is DeferProp) // Filter props that are instances of DeferProp
+            .Select(kv => new
+            {
+                Key = kv.Key,
+                Group = ((DeferProp)kv.Value!).Group()
+            }) // Map each prop to a new object with Key and Group
+
+            .GroupBy(x => x.Group) // Group by 'Group'
+            .ToDictionary(
+                g => g.Key!,
+                g => g.Select(x => x.Key).ToList() // Extract 'Key' for each group
+            );
+
+        if (deferredProps.Count == 0)
+        {
+            return null;
+        }
+
+        // Return the result
+        return deferredProps;
     }
 }

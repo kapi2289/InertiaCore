@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
 
@@ -33,6 +34,10 @@ public static class Inertia
     public static AlwaysProp Always(Func<object?> callback) => _factory.Always(callback);
 
     public static AlwaysProp Always(Func<Task<object?>> callback) => _factory.Always(callback);
+
+    public static DeferProp Defer(Func<object?> callback, string group = "default") => _factory.Defer(callback, group);
+
+    public static DeferProp Defer(Func<Task<object?>> callback, string group = "default") => _factory.Defer(callback, group);
 
     public static MergeProp Merge(object? value) => _factory.Merge(value);
 
