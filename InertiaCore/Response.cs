@@ -185,6 +185,11 @@ public class Response : IActionResult
             .Where(resolvedProps.Contains) // Filter only the props that are in the resolved props
             .ToList();
 
+        if (mergeProps.Count == 0)
+        {
+            return null;
+        }
+
         // Return the result
         return mergeProps;
     }

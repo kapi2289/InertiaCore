@@ -177,7 +177,7 @@ public partial class Tests
             { "errors", new Dictionary<string, string>(0) }
         }));
 
-        Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { }));
+        Assert.That(page?.MergeProps, Is.EqualTo(null));
     }
 
     public void TestNoMergeProps()
@@ -201,6 +201,7 @@ public partial class Tests
             { "testFunc", "Func" },
             { "errors", new Dictionary<string, string>(0) }
         }));
-        Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { }));
+        Assert.That(page?.MergeProps, Is.EqualTo(null));
     }
+
 }
