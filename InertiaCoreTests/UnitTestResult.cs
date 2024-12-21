@@ -102,6 +102,7 @@ public partial class Tests
         });
     }
 
+    [Test]
     [Description("Test if the JSON result with deferred data is created correctly.")]
     public void TestJsonDeferredResult()
     {
@@ -134,13 +135,9 @@ public partial class Tests
             Assert.That((json as Page)?.Props, Is.EqualTo(new Dictionary<string, object?>
             {
                 { "test", "Test" },
-                { "testDeferred", "Deferred" },
                 { "errors", new Dictionary<string, string>(0) }
             }));
             Assert.That((json as Page)?.MergeProps, Is.EqualTo(null));
-            // Assert.That((json as Page)?.MergeProps, Is.EqualTo(new List<string> {
-            //     "testDeferred"
-            // }));
 
             // Check the serialized JSON
             var jsonString = JsonSerializer.Serialize(json);
@@ -152,6 +149,7 @@ public partial class Tests
         });
     }
 
+    [Test]
     [Description("Test if the JSON result with deferred & merge data is created correctly.")]
     public void TestJsonMergeDeferredResult()
     {
@@ -163,7 +161,9 @@ public partial class Tests
 
         var headers = new HeaderDictionary
         {
-            { "X-Inertia", "true" }
+            { Header.Inertia, "true" },
+            { Header.PartialComponent, "Test/Page" },
+            { Header.PartialOnly, "testMerged" },
         };
 
         var context = PrepareContext(headers);
@@ -183,13 +183,13 @@ public partial class Tests
             Assert.That((json as Page)?.Component, Is.EqualTo("Test/Page"));
             Assert.That((json as Page)?.Props, Is.EqualTo(new Dictionary<string, object?>
             {
-                { "test", "Test" },
                 { "testMerged", "Merged" },
                 { "errors", new Dictionary<string, string>(0) }
             }));
             Assert.That((json as Page)?.MergeProps, Is.EqualTo(new List<string> {
                 "testMerged"
             }));
+            Assert.That((json as Page)?.DeferredProps, Is.EqualTo(null));
 
             // Check the serialized JSON
             var jsonString = JsonSerializer.Serialize(json);
@@ -197,6 +197,7 @@ public partial class Tests
 
             Assert.That(dictionary, Is.Not.Null);
             Assert.That(dictionary!.ContainsKey("MergeProps"), Is.True);
+            Assert.That(dictionary!.ContainsKey("DeferredProps"), Is.False);
         });
     }
 
