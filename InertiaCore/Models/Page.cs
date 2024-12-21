@@ -6,4 +6,5 @@ internal class Page
     public string Component { get; set; } = default!;
     public string? Version { get; set; }
     public string Url { get; set; } = default!;
+    public List<string>? MergeProps { get; set; }
 }
