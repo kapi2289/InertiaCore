@@ -32,7 +32,7 @@ internal class InertiaActionFilter : IActionFilter
         };
 
         if (destinationUrl == null) return;
-        context.HttpContext.Response.Headers.Add("Location", destinationUrl);
+        context.HttpContext.Response.Headers.Override("Location", destinationUrl);
         context.Result = new StatusCodeResult((int)HttpStatusCode.RedirectMethod);
     }
 
