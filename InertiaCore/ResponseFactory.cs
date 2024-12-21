@@ -26,6 +26,8 @@ internal interface IResponseFactory
     public AlwaysProp Always(Func<Task<object?>> callback);
     public LazyProp Lazy(Func<object?> callback);
     public LazyProp Lazy(Func<Task<object?>> callback);
+    public OptionalProp Optional(Func<object?> callback);
+    public OptionalProp Optional(Func<Task<object?>> callback);
 }
 
 internal class ResponseFactory : IResponseFactory
@@ -127,4 +129,6 @@ internal class ResponseFactory : IResponseFactory
     public AlwaysProp Always(object? value) => new AlwaysProp(value);
     public AlwaysProp Always(Func<object?> callback) => new AlwaysProp(callback);
     public AlwaysProp Always(Func<Task<object?>> callback) => new AlwaysProp(callback);
+    public OptionalProp Optional(Func<object?> callback) => new OptionalProp(callback);
+    public OptionalProp Optional(Func<Task<object?>> callback) => new OptionalProp(callback);
 }

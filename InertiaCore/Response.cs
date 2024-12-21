@@ -56,6 +56,7 @@ public class Response : IActionResult
         {
             Func<object?> f => f.Invoke(),
             LazyProp l => l.Invoke(),
+            OptionalProp l => l.Invoke(),
             AlwaysProp l => l.Invoke(),
             _ => pair.Value
         });
