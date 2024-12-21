@@ -1,6 +1,6 @@
 namespace InertiaCore.Utils;
 
-public class LazyProp
+public class LazyProp : IgnoreFirstLoad
 {
     private readonly Func<Task<object?>> _callback;
 
