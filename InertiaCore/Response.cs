@@ -58,6 +58,7 @@ public class Response : IActionResult
         {
             Func<object?> f => f.Invoke(),
             LazyProp l => l.Invoke(),
+            OptionalProp l => l.Invoke(),
             AlwaysProp l => l.Invoke(),
             MergeProp m => m.Invoke(),
             _ => pair.Value
@@ -120,7 +121,7 @@ public class Response : IActionResult
         if (!isPartial)
         {
             props = props
-                .Where(kv => kv.Value is not LazyProp)
+                .Where(kv => (kv.Value as IgnoreFirstLoad) == null)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 

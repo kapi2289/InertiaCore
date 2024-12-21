@@ -29,6 +29,8 @@ internal interface IResponseFactory
     public MergeProp Merge(object? value);
     public MergeProp Merge(Func<object?> callback);
     public MergeProp Merge(Func<Task<object?>> callback);
+    public OptionalProp Optional(Func<object?> callback);
+    public OptionalProp Optional(Func<Task<object?>> callback);
 }
 
 internal class ResponseFactory : IResponseFactory
@@ -133,4 +135,6 @@ internal class ResponseFactory : IResponseFactory
     public MergeProp Merge(object? value) => new MergeProp(value);
     public MergeProp Merge(Func<object?> callback) => new MergeProp(callback);
     public MergeProp Merge(Func<Task<object?>> callback) => new MergeProp(callback);
+    public OptionalProp Optional(Func<object?> callback) => new OptionalProp(callback);
+    public OptionalProp Optional(Func<Task<object?>> callback) => new OptionalProp(callback);
 }
