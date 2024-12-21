@@ -21,6 +21,8 @@ internal interface IResponseFactory
     public LocationResult Location(string url);
     public void Share(string key, object? value);
     public void Share(IDictionary<string, object?> data);
+    public void ClearHistory(bool clear = true);
+    public void EncryptHistory(bool encrypt = true);
     public AlwaysProp Always(object? value);
     public AlwaysProp Always(Func<object?> callback);
     public AlwaysProp Always(Func<Task<object?>> callback);
@@ -36,6 +38,10 @@ internal class ResponseFactory : IResponseFactory
 
     private object? _version;
 
+    protected bool clearHistory = false;
+
+    protected bool? encryptHistory;
+
     public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
         (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
 
@@ -43,7 +49,7 @@ internal class ResponseFactory : IResponseFactory
     {
         props ??= new { };
 
-        return new Response(component, props, _options.Value.RootView, GetVersion());
+        return new Response(component, props, _options.Value.RootView, GetVersion(), encryptHistory ?? _options.Value.EncryptHistory, clearHistory);
     }
 
     public async Task<IHtmlContent> Head(dynamic model)
@@ -120,6 +126,16 @@ internal class ResponseFactory : IResponseFactory
         sharedData.Merge(data);
 
         context.Features.Set(sharedData);
+    }
+
+    public void ClearHistory(bool clear = true)
+    {
+        clearHistory = clear;
+    }
+
+    public void EncryptHistory(bool encrypt = true)
+    {
+        encryptHistory = encrypt;
     }
 
     public LazyProp Lazy(Func<object?> callback) => new LazyProp(callback);

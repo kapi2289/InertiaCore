@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -15,13 +16,15 @@ public class Response : IActionResult
     private readonly object _props;
     private readonly string _rootView;
     private readonly string? _version;
+    private readonly bool _encryptHistory;
+    private readonly bool _clearHistory;
 
     private ActionContext? _context;
     private Page? _page;
     private IDictionary<string, object>? _viewData;
 
-    public Response(string component, object props, string rootView, string? version)
-        => (_component, _props, _rootView, _version) = (component, props, rootView, version);
+    public Response(string component, object props, string rootView, string? version, bool encryptHistory, bool clearHistory)
+        => (_component, _props, _rootView, _version, _encryptHistory, _clearHistory) = (component, props, rootView, version, encryptHistory, clearHistory);
 
     public async Task ExecuteResultAsync(ActionContext context)
     {
@@ -38,7 +41,9 @@ public class Response : IActionResult
             Component = _component,
             Version = _version,
             Url = _context!.RequestedUri(),
-            Props = ResolveProperties(_props.GetType().GetProperties().ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)))
+            Props = ResolveProperties(_props.GetType().GetProperties().ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props))),
+            EncryptHistory = _encryptHistory,
+            ClearHistory = _clearHistory,
         };
 
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
@@ -64,7 +69,7 @@ public class Response : IActionResult
     protected internal JsonResult GetJson()
     {
         _context!.HttpContext.Response.Headers.Add(Header.Inertia, "true");
-        _context!.HttpContext.Response.Headers.Add("Vary", "Accept");
+        _context!.HttpContext.Response.Headers.Add("Vary", Header.Inertia);
         _context!.HttpContext.Response.StatusCode = 200;
 
         return new JsonResult(_page, new JsonSerializerOptions
