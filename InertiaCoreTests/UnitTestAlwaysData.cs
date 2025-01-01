@@ -13,10 +13,7 @@ public partial class Tests
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestAlways = _factory.Always(() =>
-            {
-                return "Always";
-            })
+            TestAlways = _factory.Always(() => "Always")
         });
 
         var context = PrepareContext();
