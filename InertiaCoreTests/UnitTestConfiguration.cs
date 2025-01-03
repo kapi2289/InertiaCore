@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using InertiaCore;
 using InertiaCore.Extensions;
 using InertiaCore.Ssr;
@@ -13,10 +11,6 @@ namespace InertiaCoreTests;
 
 internal class DummySerializer : DefaultInertiaSerializer
 {
-    protected new static JsonSerializerOptions GetOptions()
-    {
-        return DefaultInertiaSerializer.GetOptions();
-    }
 }
 
 public partial class Tests

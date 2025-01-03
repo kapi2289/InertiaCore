@@ -1,5 +1,3 @@
-using InertiaCore.Utils;
-
 namespace InertiaCore.Models;
 
 public class InertiaOptions
