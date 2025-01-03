@@ -21,14 +21,15 @@
 - [Installation](#installation)
 - [Getting started](#getting-started)
 - [Usage](#usage)
-  * [Frontend](#frontend)
-  * [Backend](#backend)
+    * [Frontend](#frontend)
+    * [Backend](#backend)
 - [Features](#features)
-  * [Shared data](#shared-data)
-  * [Async Lazy Props](#async-lazy-props)
-  * [Server-side rendering](#server-side-rendering)
-  * [Vite helper](#vite-helper)
-    - [Examples](#examples-1)
+    * [Shared data](#shared-data)
+    * [Async Lazy Props](#async-lazy-props)
+    * [Server-side rendering](#server-side-rendering)
+    * [Custom JSON serializer](#custom-json-serializer)
+    * [Vite helper](#vite-helper)
+        - [Examples](#examples-1)
 
 ## Examples
 
@@ -162,7 +163,9 @@ app.Use(async (context, next) =>
 
 ### Async Lazy Props
 
-You can use async lazy props to load data asynchronously in your components. This is useful for loading data that is not needed for the initial render of the page.
+You can use async lazy props to load data asynchronously in your components. This is useful for loading data that is not
+needed for the initial render of the page.
+
 ```csharp
 
 // simply use the LazyProps the same way you normally would, except pass in an async function
@@ -194,7 +197,7 @@ If you want to enable SSR in your Inertia app, remember to add `Inertia.Head()` 
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title inertia>My App</title>
-    
+
     @await Inertia.Head(Model)
 </head>
 <body>
@@ -217,9 +220,78 @@ builder.Services.AddInertia(options =>
 });
 ```
 
+### Custom JSON serializer
+
+You can use a custom JSON serializer in your app by creating a custom class implementing the `IInertiaSerializer`
+interface:
+
+```csharp
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
+
+public class CustomSerializer : IInertiaSerializer
+{
+    // Used in HTML responses
+    public string Serialize(object? obj)
+    {
+        // Default serialization
+        return JsonSerializer.Serialize(obj, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        });
+    }
+
+    // Used in JSON responses
+    public JsonResult SerializeResult(object? obj)
+    {
+        // Default serialization
+        return new JsonResult(obj, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        });
+    }
+}
+```
+
+or extending the `DefaultInertiaSerializer` class, which also implements the `IInertiaSerializer` interface:
+
+```csharp
+public class CustomSerializer : DefaultInertiaSerializer
+{
+    protected new static JsonSerializerOptions GetOptions()
+    {
+        // Default options
+        return new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        };
+    }
+}
+```
+
+You can then register it in the configuration:
+
+```csharp
+builder.Services.AddInertia();
+
+[...]
+
+builder.Services.UseInertiaSerializer<CustomSerializer>();
+
+[...]
+
+app.UseInertia();
+```
+
 ### Vite Helper
 
-A Vite helper class is available to automatically load your generated styles or scripts by simply using the `@Vite.Input("src/main.tsx")` helper. You can also enable HMR when using React by using the `@Vite.ReactRefresh()` helper. This pairs well with the `laravel-vite-plugin` npm package.
+A Vite helper class is available to automatically load your generated styles or scripts by simply using the
+`@Vite.Input("src/main.tsx")` helper. You can also enable HMR when using React by using the `@Vite.ReactRefresh()`
+helper. This pairs well with the `laravel-vite-plugin` npm package.
 
 To get started with the Vite Helper, you will need to add one more line to the `Program.cs` or `Starup.cs` file.
 
@@ -241,7 +313,6 @@ builder.Services.AddViteHelper(options =>
 });
 ```
 
-
 #### Examples
 ---
 
@@ -252,52 +323,52 @@ Here's an example for a TypeScript React app with HMR:
 @using InertiaCore.Utils
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title inertia>My App</title>
-  </head>
-  <body>
-    @* This has to go first, otherwise preamble error *@
-    @Vite.ReactRefresh()
-    @await Inertia.Html(Model)
-    @Vite.Input("src/main.tsx")
-  </body>
+</head>
+<body>
+@* This has to go first, otherwise preamble error *@
+@Vite.ReactRefresh()
+@await Inertia.Html(Model)
+@Vite.Input("src/main.tsx")
+</body>
 </html>
 ```
 
 And here is the corresponding `vite.config.js`
 
 ```js
-import { defineConfig } from "vite";
+import {defineConfig} from "vite";
 import react from "@vitejs/plugin-react";
 import laravel from "laravel-vite-plugin";
 import path from "path";
-import { mkdirSync } from "fs";
+import {mkdirSync} from "fs";
 
 // Auto-initialize the default output directory
 const outDir = "../wwwroot/build";
 
-mkdirSync(outDir, { recursive: true });
+mkdirSync(outDir, {recursive: true});
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    laravel({
-      input: ["src/main.tsx"],
-      publicDirectory: outDir,
-    }),
-    react(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
+    plugins: [
+        laravel({
+            input: ["src/main.tsx"],
+            publicDirectory: outDir,
+        }),
+        react(),
+    ],
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "src"),
+        },
     },
-  },
-  build: {
-    outDir,
-    emptyOutDir: true,
-  },
+    build: {
+        outDir,
+        emptyOutDir: true,
+    },
 });
 ```
 
@@ -310,15 +381,15 @@ Here's an example for a TypeScript Vue app with Hot Reload:
 @using InertiaCore.Utils
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title inertia>My App</title>
-  </head>
-  <body>
-    @await Inertia.Html(Model)
-    @Vite.Input("src/app.ts")
-  </body>
+</head>
+<body>
+@await Inertia.Html(Model)
+@Vite.Input("src/app.ts")
+</body>
 </html>
 ```
 
@@ -336,30 +407,30 @@ const outDir = "../wwwroot/build";
 mkdirSync(outDir, {recursive: true});
 
 export default defineConfig({
-  plugins: [
-    laravel({
-      input: ["src/app.ts"],
-      publicDirectory: outDir,
-      refresh: true,
-    }),
-    vue({
-      template: {
-        transformAssetUrls: {
-          base: null,
-          includeAbsolute: false,
+    plugins: [
+        laravel({
+            input: ["src/app.ts"],
+            publicDirectory: outDir,
+            refresh: true,
+        }),
+        vue({
+            template: {
+                transformAssetUrls: {
+                    base: null,
+                    includeAbsolute: false,
+                },
+            },
+        }),
+    ],
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "src"),
         },
-      },
-    }),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
     },
-  },
-  build: {
-    outDir,
-    emptyOutDir: true,
-  },
+    build: {
+        outDir,
+        emptyOutDir: true,
+    },
 });
 ```
 
@@ -372,13 +443,13 @@ Here's an example that just produces a single CSS file:
 @using InertiaCore.Utils
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  </head>
-  <body>
-    @await Inertia.Html(Model)
-    @Vite.Input("src/main.scss")
-  </body>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+@await Inertia.Html(Model)
+@Vite.Input("src/main.scss")
+</body>
 </html>
 ```
