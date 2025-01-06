@@ -1,4 +1,3 @@
-using System.IO.Abstractions;
 using System.Net;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
@@ -25,7 +24,7 @@ public static class Configure
         {
             if (context.IsInertiaRequest()
                 && context.Request.Method == "GET"
-                && context.Request.Headers[Header.Version] != Inertia.GetVersion())
+                && context.Request.Headers[InertiaHeader.Version] != Inertia.GetVersion())
             {
                 await OnVersionChange(context, app);
                 return;
@@ -69,7 +68,7 @@ public static class Configure
 
         if (tempData.Any()) tempData.Keep();
 
-        context.Response.Headers.Override(Header.Location, context.RequestedUri());
+        context.Response.Headers.Override(InertiaHeader.Location, context.RequestedUri());
         context.Response.StatusCode = (int)HttpStatusCode.Conflict;
 
         await context.Response.CompleteAsync();

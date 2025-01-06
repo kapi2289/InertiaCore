@@ -14,7 +14,7 @@ public class LocationResult : IActionResult
     {
         if (context.IsInertiaRequest())
         {
-            context.HttpContext.Response.Headers.Override(Header.Location, _url);
+            context.HttpContext.Response.Headers.Override(InertiaHeader.Location, _url);
             await new StatusCodeResult((int)HttpStatusCode.Conflict).ExecuteResultAsync(context);
             return;
         }
