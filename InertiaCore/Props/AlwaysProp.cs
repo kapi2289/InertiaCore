@@ -1,4 +1,4 @@
-namespace InertiaCore.Utils;
+namespace InertiaCore.Props;
 
 public class AlwaysProp
 {

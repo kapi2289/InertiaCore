@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using InertiaCore.Extensions;
 using InertiaCore.Models;
+using InertiaCore.Props;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -156,7 +157,7 @@ public class Response : IActionResult
     {
         var alwaysProps = _props.GetType().GetProperties()
                         .Where(o => o.PropertyType == typeof(AlwaysProp))
-                        .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)); ;
+                        .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
         return props
             .Where(kv => kv.Value is not AlwaysProp)

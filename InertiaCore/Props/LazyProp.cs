@@ -1,4 +1,6 @@
-namespace InertiaCore.Utils;
+using InertiaCore.Utils;
+
+namespace InertiaCore.Props;
 
 public class LazyProp : IgnoreFirstLoad
 {
