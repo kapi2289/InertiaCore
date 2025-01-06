@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace InertiaCore.Extensions;
 
@@ -44,10 +45,21 @@ public static class Configure
 
         services.AddSingleton<IResponseFactory, ResponseFactory>();
         services.AddSingleton<IGateway, Gateway>();
+        services.AddSingleton<IInertiaSerializer, DefaultInertiaSerializer>();
 
         services.Configure<MvcOptions>(mvcOptions => { mvcOptions.Filters.Add<InertiaActionFilter>(); });
 
         if (options != null) services.Configure(options);
+
+        return services;
+    }
+
+    public static IServiceCollection UseInertiaSerializer<TImplementation>(this IServiceCollection services)
+        where TImplementation : IInertiaSerializer
+    {
+        services.Replace(
+            new ServiceDescriptor(typeof(IInertiaSerializer), typeof(TImplementation), ServiceLifetime.Singleton)
+        );
 
         return services;
     }

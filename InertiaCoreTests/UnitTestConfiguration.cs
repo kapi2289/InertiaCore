@@ -9,6 +9,10 @@ using Microsoft.Extensions.Options;
 
 namespace InertiaCoreTests;
 
+internal class DummySerializer : DefaultInertiaSerializer
+{
+}
+
 public partial class Tests
 {
     [Test]
@@ -28,6 +32,7 @@ public partial class Tests
 
             Assert.That(builder.Services.Any(s => s.ServiceType == typeof(IResponseFactory)), Is.True);
             Assert.That(builder.Services.Any(s => s.ServiceType == typeof(IGateway)), Is.True);
+            Assert.That(builder.Services.Any(s => s.ServiceType == typeof(IInertiaSerializer)), Is.True);
         });
 
         var mvcConfiguration =
@@ -44,5 +49,31 @@ public partial class Tests
         Assert.DoesNotThrow(() => app.UseInertia());
 
         Assert.DoesNotThrow(() => Inertia.GetVersion());
+    }
+
+    [Test]
+    [Description("Test if the configuration registers properly custom JSON serializer.")]
+    public void TestSerializerConfiguration()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddInertia();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(builder.Services.Any(s => s.ServiceType == typeof(IInertiaSerializer)), Is.True);
+
+            Assert.That(builder.Services.Any(s => s.ImplementationType == typeof(DefaultInertiaSerializer)), Is.True);
+            Assert.That(builder.Services.Any(s => s.ImplementationType == typeof(DummySerializer)), Is.False);
+        });
+
+        Assert.DoesNotThrow(() => builder.Services.UseInertiaSerializer<DummySerializer>());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(builder.Services.Any(s => s.ServiceType == typeof(IInertiaSerializer)), Is.True);
+
+            Assert.That(builder.Services.Any(s => s.ImplementationType == typeof(DefaultInertiaSerializer)), Is.False);
+            Assert.That(builder.Services.Any(s => s.ImplementationType == typeof(DummySerializer)), Is.True);
+        });
     }
 }

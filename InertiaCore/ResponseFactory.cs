@@ -1,7 +1,4 @@
 using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
 using InertiaCore.Utils;
@@ -32,18 +29,20 @@ internal class ResponseFactory : IResponseFactory
 {
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly IGateway _gateway;
+    private readonly IInertiaSerializer _serializer;
     private readonly IOptions<InertiaOptions> _options;
 
     private object? _version;
 
-    public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
-        (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
+    public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IInertiaSerializer serializer,
+        IOptions<InertiaOptions> options)
+        => (_contextAccessor, _gateway, _serializer, _options) = (contextAccessor, gateway, serializer, options);
 
     public Response Render(string component, object? props = null)
     {
         props ??= new { };
 
-        return new Response(component, props, _options.Value.RootView, GetVersion());
+        return new Response(component, props, _options.Value.RootView, GetVersion(), _serializer);
     }
 
     public async Task<IHtmlContent> Head(dynamic model)
@@ -77,13 +76,7 @@ internal class ResponseFactory : IResponseFactory
             }
         }
 
-        var data = JsonSerializer.Serialize(model,
-            new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
-            });
-
+        var data = _serializer.Serialize(model);
         var encoded = WebUtility.HtmlEncode(data);
 
         return new HtmlString($"<div id=\"app\" data-page=\"{encoded}\"></div>");

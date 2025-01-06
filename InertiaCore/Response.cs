@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Utils;
@@ -15,13 +13,14 @@ public class Response : IActionResult
     private readonly object _props;
     private readonly string _rootView;
     private readonly string? _version;
+    private readonly IInertiaSerializer _serializer;
 
     private ActionContext? _context;
     private Page? _page;
     private IDictionary<string, object>? _viewData;
 
-    public Response(string component, object props, string rootView, string? version)
-        => (_component, _props, _rootView, _version) = (component, props, rootView, version);
+    public Response(string component, object props, string rootView, string? version, IInertiaSerializer serializer)
+        => (_component, _props, _rootView, _version, _serializer) = (component, props, rootView, version, serializer);
 
     public async Task ExecuteResultAsync(ActionContext context)
     {
@@ -67,11 +66,7 @@ public class Response : IActionResult
         _context!.HttpContext.Response.Headers.Override("Vary", "Accept");
         _context!.HttpContext.Response.StatusCode = 200;
 
-        return new JsonResult(_page, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReferenceHandler = ReferenceHandler.IgnoreCycles
-        });
+        return _serializer.SerializeResult(_page);
     }
 
     private ViewResult GetView()
