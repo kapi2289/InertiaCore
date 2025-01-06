@@ -122,6 +122,8 @@ public class Response : IActionResult
         }
         else
         {
+            props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
+
             if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialOnly))
             {
                 props = ResolveOnly(props);
