@@ -68,8 +68,8 @@ public class Response : IActionResult
 
     protected internal JsonResult GetJson()
     {
-        _context!.HttpContext.Response.Headers.Add(Header.Inertia, "true");
-        _context!.HttpContext.Response.Headers.Add("Vary", Header.Inertia);
+        _context!.HttpContext.Response.Headers.Override(InertiaHeader.Inertia, "true");
+        _context!.HttpContext.Response.Headers.Override("Vary", InertiaHeader.Inertia);
         _context!.HttpContext.Response.StatusCode = 200;
 
         return new JsonResult(_page, new JsonSerializerOptions
@@ -117,7 +117,7 @@ public class Response : IActionResult
 
     private Dictionary<string, object?> ResolveProperties(Dictionary<string, object?> props)
     {
-        bool isPartial = _context!.IsInertiaPartialComponent(_component);
+        var isPartial = _context!.IsInertiaPartialComponent(_component);
 
         if (!isPartial)
         {
@@ -125,19 +125,22 @@ public class Response : IActionResult
                 .Where(kv => kv.Value is not LazyProp)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
-
-        if (isPartial && _context!.HttpContext.Request.Headers.ContainsKey(Header.PartialOnly))
+        else
         {
-            props = ResolveOnly(props);
-        }
+            props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
 
-        if (isPartial && _context!.HttpContext.Request.Headers.ContainsKey(Header.PartialExcept))
-        {
-            props = ResolveExcept(props);
+            if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialOnly))
+            {
+                props = ResolveOnly(props);
+            }
+
+            if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialExcept))
+            {
+                props = ResolveExcept(props);
+            }
         }
 
         props = ResolveAlways(props);
-
         props = PrepareProps(props);
 
         return props;
