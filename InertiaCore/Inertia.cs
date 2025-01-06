@@ -28,5 +28,13 @@ public static class Inertia
 
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
 
+    public static AlwaysProp Always(object? value) => _factory.Always(value);
+
+    public static AlwaysProp Always(Func<object?> callback) => _factory.Always(callback);
+
+    public static AlwaysProp Always(Func<Task<object?>> callback) => _factory.Always(callback);
+
     public static LazyProp Lazy(Func<object?> callback) => _factory.Lazy(callback);
+
+    public static LazyProp Lazy(Func<Task<object?>> callback) => _factory.Lazy(callback);
 }
