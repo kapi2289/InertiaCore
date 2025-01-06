@@ -53,14 +53,8 @@ public partial class Tests
         {
             Test = "Test",
             TestPartial = "Partial",
-            TestFunc = new Func<string>(() =>
-            {
-                return "Func";
-            }),
-            TestLazy = _factory.Lazy(() =>
-            {
-                return "Lazy";
-            })
+            TestFunc = new Func<string>(() => "Func"),
+            TestLazy = _factory.Lazy(() => "Lazy")
         });
 
         var headers = new HeaderDictionary
