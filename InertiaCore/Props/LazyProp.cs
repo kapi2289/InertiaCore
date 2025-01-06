@@ -2,7 +2,7 @@ using InertiaCore.Utils;
 
 namespace InertiaCore.Props;
 
-public class LazyProp : IgnoreFirstLoad
+public class LazyProp : IIgnoresFirstLoad
 {
     private readonly object? _value;
 
@@ -13,18 +13,13 @@ public class LazyProp : IgnoreFirstLoad
     {
         // Check if the value is a callable delegate
         return Task.Run(async () =>
-           {
-               if (_value is Func<Task<object?>> asyncCallable)
-               {
-                   return await asyncCallable.Invoke();
-               }
-
-               if (_value is Func<object?> callable)
-               {
-                   return callable.Invoke();
-               }
-
-               return _value;
-           }).GetAwaiter().GetResult();
+        {
+            return _value switch
+            {
+                Func<Task<object?>> asyncCallable => await asyncCallable.Invoke(),
+                Func<object?> callable => callable.Invoke(),
+                _ => _value
+            };
+        }).GetAwaiter().GetResult();
     }
 }

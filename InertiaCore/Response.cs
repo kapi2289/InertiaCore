@@ -119,7 +119,7 @@ public class Response : IActionResult
         if (!isPartial)
         {
             props = props
-                .Where(kv => (kv.Value as IgnoreFirstLoad) == null)
+                .Where(kv => kv.Value is not IIgnoresFirstLoad)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
         else
