@@ -161,9 +161,9 @@ public partial class Tests
 
         var headers = new HeaderDictionary
         {
-            { Header.Inertia, "true" },
-            { Header.PartialComponent, "Test/Page" },
-            { Header.PartialOnly, "testMerged" },
+            { InertiaHeader.Inertia, "true" },
+            { InertiaHeader.PartialComponent, "Test/Page" },
+            { InertiaHeader.PartialOnly, "testMerged" },
         };
 
         var context = PrepareContext(headers);

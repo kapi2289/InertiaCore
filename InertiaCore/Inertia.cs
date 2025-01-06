@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
 

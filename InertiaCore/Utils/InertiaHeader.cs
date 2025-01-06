@@ -1,6 +1,6 @@
 namespace InertiaCore.Utils;
 
-public static class Header
+public static class InertiaHeader
 {
     public const string Inertia = "X-Inertia";
 
