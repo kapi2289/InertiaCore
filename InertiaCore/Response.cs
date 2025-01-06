@@ -66,7 +66,7 @@ public class Response : IActionResult
 
     protected internal JsonResult GetJson()
     {
-        _context!.HttpContext.Response.Headers.Override(Header.Inertia, "true");
+        _context!.HttpContext.Response.Headers.Override(InertiaHeader.Inertia, "true");
         _context!.HttpContext.Response.Headers.Override("Vary", "Accept");
         _context!.HttpContext.Response.StatusCode = 200;
 
@@ -115,7 +115,7 @@ public class Response : IActionResult
 
     private Dictionary<string, object?> ResolveProperties(Dictionary<string, object?> props)
     {
-        bool isPartial = _context!.IsInertiaPartialComponent(_component);
+        var isPartial = _context!.IsInertiaPartialComponent(_component);
 
         if (!isPartial)
         {
@@ -123,19 +123,22 @@ public class Response : IActionResult
                 .Where(kv => kv.Value is not LazyProp)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
-
-        if (isPartial && _context!.HttpContext.Request.Headers.ContainsKey(Header.PartialOnly))
+        else
         {
-            props = ResolveOnly(props);
-        }
+            props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
 
-        if (isPartial && _context!.HttpContext.Request.Headers.ContainsKey(Header.PartialExcept))
-        {
-            props = ResolveExcept(props);
+            if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialOnly))
+            {
+                props = ResolveOnly(props);
+            }
+
+            if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialExcept))
+            {
+                props = ResolveExcept(props);
+            }
         }
 
         props = ResolveAlways(props);
-
         props = PrepareProps(props);
 
         return props;
@@ -166,7 +169,7 @@ public class Response : IActionResult
     {
         // Parse the "RESET" header into a collection of keys to reset
         var resetProps = new HashSet<string>(
-           _context!.HttpContext.Request.Headers[Header.Reset]
+           _context!.HttpContext.Request.Headers[InertiaHeader.Reset]
                .ToString()
                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                .Select(s => s.Trim()),
