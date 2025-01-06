@@ -1,25 +1,16 @@
 namespace InertiaCore.Props;
 
-public class AlwaysProp
+public class AlwaysProp : InvokableProp
 {
-    private readonly object? _value;
-
-    public AlwaysProp(object? value)
+    internal AlwaysProp(object? value) : base(value)
     {
-        _value = value;
     }
 
-    public object? Invoke()
+    internal AlwaysProp(Func<object?> value) : base(value)
     {
-        // Check if the value is a callable delegate
-        return Task.Run(async () =>
-        {
-            return _value switch
-            {
-                Func<Task<object?>> asyncCallable => await asyncCallable.Invoke(),
-                Func<object?> callable => callable.Invoke(),
-                _ => _value
-            };
-        }).GetAwaiter().GetResult();
+    }
+
+    internal AlwaysProp(Func<Task<object?>> value) : base(value)
+    {
     }
 }
