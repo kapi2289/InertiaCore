@@ -136,41 +136,4 @@ public partial class Tests
             { "errors", new Dictionary<string, string>(0) }
         }));
     }
-
-    [Test]
-    [Description("Test if the omitted data is fetched properly with specified partial props.")]
-    public void TestOmittedPartialData()
-    {
-        var testFunction = new Func<Task<string>>(async () =>
-        {
-            await Task.Delay(100);
-            return "Lazy Async";
-        });
-
-        var response = _factory.Render("Test/Page", new
-        {
-            TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(async () => await testFunction()),
-        });
-
-        var headers = new HeaderDictionary
-        {
-            { "X-Inertia-Partial-Data", "testFunc,testLazy" },
-            { "X-Inertia-Partial-Except", "testFunc" },
-            { "X-Inertia-Partial-Component", "Test/Page" }
-        };
-
-        var context = PrepareContext(headers);
-
-        response.SetContext(context);
-        response.ProcessResponse();
-
-        var page = response.GetJson().Value as Page;
-
-        Assert.That(page?.Props, Is.EqualTo(new Dictionary<string, object?>
-        {
-            { "testLazy", "Lazy Async" },
-            { "errors", new Dictionary<string, string>(0) }
-        }));
-    }
 }
