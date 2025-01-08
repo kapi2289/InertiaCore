@@ -27,19 +27,20 @@ public class Response : IActionResult
     public async Task ExecuteResultAsync(ActionContext context)
     {
         SetContext(context);
-        ProcessResponse();
+        await ProcessResponse();
 
         await GetResult().ExecuteResultAsync(_context!);
     }
 
-    protected internal void ProcessResponse()
+    protected internal async Task ProcessResponse()
     {
         var page = new Page
         {
             Component = _component,
             Version = _version,
             Url = _context!.RequestedUri(),
-            Props = ResolveProperties(_props.GetType().GetProperties().ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)))
+            Props = await ResolveProperties(_props.GetType().GetProperties()
+                .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)))
         };
 
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
@@ -51,15 +52,15 @@ public class Response : IActionResult
         SetPage(page);
     }
 
-    private static Dictionary<string, object?> PrepareProps(Dictionary<string, object?> props)
+    private static async Task<Dictionary<string, object?>> PrepareProps(Dictionary<string, object?> props)
     {
-        return props.ToDictionary(pair => pair.Key, pair => pair.Value switch
+        return (await Task.WhenAll(props.Select(async pair => pair.Value switch
         {
-            Func<object?> f => f.Invoke(),
-            LazyProp l => l.Invoke(),
-            AlwaysProp l => l.Invoke(),
-            _ => pair.Value
-        });
+            Func<object?> f => (pair.Key, f.Invoke()),
+            LazyProp l => (pair.Key, await l.Invoke()),
+            AlwaysProp l => (pair.Key, await l.Invoke()),
+            _ => (pair.Key, pair.Value)
+        }))).ToDictionary(pair => pair.Key, pair => pair.Item2);
     }
 
     protected internal JsonResult GetJson()
@@ -111,7 +112,7 @@ public class Response : IActionResult
         return this;
     }
 
-    private Dictionary<string, object?> ResolveProperties(Dictionary<string, object?> props)
+    private async Task<Dictionary<string, object?>> ResolveProperties(Dictionary<string, object?> props)
     {
         var isPartial = _context!.IsInertiaPartialComponent(_component);
 
@@ -126,37 +127,29 @@ public class Response : IActionResult
             props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
 
             if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialOnly))
-            {
                 props = ResolveOnly(props);
-            }
 
             if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialExcept))
-            {
                 props = ResolveExcept(props);
-            }
         }
 
         props = ResolveAlways(props);
-        props = PrepareProps(props);
+        props = await PrepareProps(props);
 
         return props;
     }
 
     private Dictionary<string, object?> ResolveOnly(Dictionary<string, object?> props)
-    {
-        return _context!.OnlyProps(props);
-    }
+        => _context!.OnlyProps(props);
 
     private Dictionary<string, object?> ResolveExcept(Dictionary<string, object?> props)
-    {
-        return _context!.ExceptProps(props);
-    }
+        => _context!.ExceptProps(props);
 
     private Dictionary<string, object?> ResolveAlways(Dictionary<string, object?> props)
     {
         var alwaysProps = _props.GetType().GetProperties()
-                        .Where(o => o.PropertyType == typeof(AlwaysProp))
-                        .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
+            .Where(o => o.PropertyType == typeof(AlwaysProp))
+            .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
 
         return props
             .Where(kv => kv.Value is not AlwaysProp)
