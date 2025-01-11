@@ -53,7 +53,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the JSON result with merged data is created correctly.")]
-    public void TestJsonMergedResult()
+    public async Task TestJsonMergedResult()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -69,7 +69,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var result = response.GetResult();
 
