@@ -1,15 +1,24 @@
+using InertiaCore.Props;
+
 namespace InertiaCore.Utils;
 
-public class DeferProp : IgnoreFirstLoad, Mergeable
+public class DeferProp : InvokableProp, IgnoreFirstLoad, Mergeable
 {
     public bool merge { get; set; }
+    protected readonly string _group = "default";
 
-    private readonly object? _value;
-    protected readonly string _group;
-
-    public DeferProp(object? value, string group)
+    public DeferProp(object? value, string group) : base(value)
     {
-        _value = value;
+        _group = group;
+    }
+
+    internal DeferProp(Func<object?> value, string group) : base(value)
+    {
+        _group = group;
+    }
+
+    internal DeferProp(Func<Task<object?>> value, string group) : base(value)
+    {
         _group = group;
     }
 
@@ -23,24 +32,5 @@ public class DeferProp : IgnoreFirstLoad, Mergeable
     public string? Group()
     {
         return _group;
-    }
-
-    public object? Invoke()
-    {
-        // Check if the value is a callable delegate
-        return Task.Run(async () =>
-           {
-               if (_value is Func<Task<object?>> asyncCallable)
-               {
-                   return await asyncCallable.Invoke();
-               }
-
-               if (_value is Func<object?> callable)
-               {
-                   return callable.Invoke();
-               }
-
-               return _value;
-           }).GetAwaiter().GetResult();
     }
 }
