@@ -7,7 +7,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if the merge data is fetched properly.")]
-    public void TestMergeData()
+    public async Task TestMergeData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -22,7 +22,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -38,7 +38,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the merge data is fetched properly with specified partial props.")]
-    public void TestMergePartialData()
+    public async Task TestMergePartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -55,7 +55,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -71,7 +71,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the merge async data is fetched properly.")]
-    public void TestMergeAsyncData()
+    public async Task TestMergeAsyncData()
     {
         var testFunction = new Func<Task<object?>>(async () =>
         {
@@ -89,7 +89,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -105,7 +105,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the merge async data is fetched properly with specified partial props.")]
-    public void TestMergeAsyncPartialData()
+    public async Task TestMergeAsyncPartialData()
     {
         var testFunction = new Func<Task<string>>(async () =>
         {
@@ -128,7 +128,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -144,7 +144,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the merge async data is fetched properly without specified partial props.")]
-    public void TestMergeAsyncPartialDataOmitted()
+    public async Task TestMergeAsyncPartialDataOmitted()
     {
         var testFunction = new Func<Task<string>>(async () =>
         {
@@ -167,7 +167,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -180,7 +180,7 @@ public partial class Tests
         Assert.That(page?.MergeProps, Is.EqualTo(null));
     }
 
-    public void TestNoMergeProps()
+    public async Task TestNoMergeProps()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -191,7 +191,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 

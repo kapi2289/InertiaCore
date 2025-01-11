@@ -7,7 +7,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if shared data is merged with the props properly.")]
-    public void TestSharedData()
+    public async Task TestSharedData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -20,7 +20,7 @@ public partial class Tests
         var context = PrepareContext(null, sharedData);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 

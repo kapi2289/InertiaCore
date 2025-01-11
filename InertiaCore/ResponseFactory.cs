@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using InertiaCore.Extensions;
 using InertiaCore.Models;
+using InertiaCore.Props;
 using InertiaCore.Ssr;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
