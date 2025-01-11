@@ -7,7 +7,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if the optional data is fetched properly.")]
-    public void TestOptionalData()
+    public async Task TestOptionalData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -23,7 +23,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -37,7 +37,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the optional data is fetched properly with specified partial props.")]
-    public void TestOptionalPartialData()
+    public async Task TestOptionalPartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -54,7 +54,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -69,7 +69,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the optional async data is fetched properly.")]
-    public void TestOptionalAsyncData()
+    public async Task TestOptionalAsyncData()
     {
         var testFunction = new Func<Task<object?>>(async () =>
         {
@@ -88,7 +88,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -102,7 +102,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the optional async data is fetched properly with specified partial props.")]
-    public void TestOptionalAsyncPartialData()
+    public async Task TestOptionalAsyncPartialData()
     {
         var testFunction = new Func<Task<string>>(async () =>
         {
@@ -125,7 +125,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
