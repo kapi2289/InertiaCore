@@ -1,8 +1,8 @@
-using InertiaCore.Props;
+using InertiaCore.Utils;
 
-namespace InertiaCore.Utils;
+namespace InertiaCore.Props;
 
-public class DeferProp : InvokableProp, IgnoreFirstLoad, Mergeable
+public class DeferProp : InvokableProp, IIgnoresFirstLoad, Mergeable
 {
     public bool merge { get; set; }
     protected readonly string _group = "default";

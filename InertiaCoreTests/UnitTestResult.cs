@@ -104,7 +104,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the JSON result with deferred data is created correctly.")]
-    public void TestJsonDeferredResult()
+    public async Task TestJsonDeferredResult()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -120,7 +120,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var result = response.GetResult();
 
@@ -151,7 +151,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the JSON result with deferred & merge data is created correctly.")]
-    public void TestJsonMergeDeferredResult()
+    public async Task TestJsonMergeDeferredResult()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -169,7 +169,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var result = response.GetResult();
 

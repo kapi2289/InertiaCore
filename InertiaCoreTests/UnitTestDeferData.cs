@@ -7,7 +7,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if the defer data is fetched properly.")]
-    public void TestDeferData()
+    public async Task TestDeferData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -22,7 +22,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -40,7 +40,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the defer data is fetched properly with specified partial props.")]
-    public void TestDeferPartialData()
+    public async Task TestDeferPartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -57,7 +57,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -74,7 +74,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the defer/merge data is fetched properly with specified partial props.")]
-    public void TestDeferMergePartialData()
+    public async Task TestDeferMergePartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -91,7 +91,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -108,7 +108,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the defer async data is fetched properly.")]
-    public void TestDeferAsyncData()
+    public async Task TestDeferAsyncData()
     {
         var testFunction = new Func<Task<object?>>(async () =>
         {
@@ -126,7 +126,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -144,7 +144,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the defer async data is fetched properly with specified partial props.")]
-    public void TestDeferAsyncPartialData()
+    public async Task TestDeferAsyncPartialData()
     {
         var testFunction = new Func<Task<string>>(async () =>
         {
@@ -167,7 +167,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -184,7 +184,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the defer & merge async data is fetched properly with specified partial props.")]
-    public void TestDeferMergeAsyncPartialData()
+    public async Task TestDeferMergeAsyncPartialData()
     {
         var testFunction = new Func<Task<string>>(async () =>
         {
@@ -207,7 +207,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -224,7 +224,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the defer async data is fetched properly without specified partial props.")]
-    public void TestDeferAsyncPartialDataOmitted()
+    public async Task TestDeferAsyncPartialDataOmitted()
     {
         var testFunction = new Func<Task<string>>(async () =>
         {
@@ -247,7 +247,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -261,7 +261,7 @@ public partial class Tests
         Assert.That(page?.MergeProps, Is.EqualTo(null));
     }
 
-    public void TestNoDeferredProps()
+    public async Task TestNoDeferredProps()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -272,7 +272,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -288,7 +288,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the defer data with multiple groups is fetched properly.")]
-    public void TestDeferMultipleGroupsData()
+    public async Task TestDeferMultipleGroupsData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -307,7 +307,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
