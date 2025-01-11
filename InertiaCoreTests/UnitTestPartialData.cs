@@ -7,7 +7,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if the props contain only the specified partial data.")]
-    public void TestPartialOnlyData()
+    public async Task TestPartialOnlyData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -34,7 +34,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -47,7 +47,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the props contain all the unspecified data")]
-    public void TestPartialFullData()
+    public async Task TestPartialFullData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -65,7 +65,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -81,7 +81,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the props contain none of the except data")]
-    public void TestPartialExceptData()
+    public async Task TestPartialExceptData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -108,7 +108,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
@@ -122,7 +122,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the props contain the correct data when using only and except data")]
-    public void TestPartialOnlyAndExceptData()
+    public async Task TestPartialOnlyAndExceptData()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -150,7 +150,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 

@@ -9,7 +9,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if the JSON result is created correctly.")]
-    public void TestJsonResult()
+    public async Task TestJsonResult()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -24,7 +24,7 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var result = response.GetResult();
 
@@ -102,7 +102,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if the view result is created correctly.")]
-    public void TestViewResult()
+    public async Task TestViewResult()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -112,7 +112,7 @@ public partial class Tests
         var context = PrepareContext();
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var result = response.GetResult();
 

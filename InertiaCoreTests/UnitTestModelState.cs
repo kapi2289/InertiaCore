@@ -6,7 +6,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if the model state dictionary is passed to the props correctly.")]
-    public void TestModelState()
+    public async Task TestModelState()
     {
         var response = _factory.Render("Test/Page", new
         {
@@ -19,7 +19,7 @@ public partial class Tests
         });
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var page = response.GetJson().Value as Page;
 
