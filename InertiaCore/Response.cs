@@ -43,6 +43,8 @@ public class Response : IActionResult
                 .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)))
         };
 
+        page.MergeProps = ResolveMergeProps(page.Props);
+
         var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
         if (shared != null)
             page.Props = shared.GetMerged(page.Props);
@@ -59,6 +61,7 @@ public class Response : IActionResult
             Func<object?> f => (pair.Key, f.Invoke()),
             LazyProp l => (pair.Key, await l.Invoke()),
             AlwaysProp l => (pair.Key, await l.Invoke()),
+            MergeProp m => (pair.Key, await m.Invoke()),
             _ => (pair.Key, pair.Value)
         }))).ToDictionary(pair => pair.Key, pair => pair.Item2);
     }
@@ -154,5 +157,37 @@ public class Response : IActionResult
         return props
             .Where(kv => kv.Value is not AlwaysProp)
             .Concat(alwaysProps).ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    private List<string>? ResolveMergeProps(Dictionary<string, object?> props)
+    {
+        // Parse the "RESET" header into a collection of keys to reset
+        var resetProps = new HashSet<string>(
+           _context!.HttpContext.Request.Headers[InertiaHeader.Reset]
+               .ToString()
+               .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+               .Select(s => s.Trim()),
+           StringComparer.OrdinalIgnoreCase
+       );
+
+        var resolvedProps = props
+            .Select(kv => kv.Key.ToCamelCase()) // Convert property name to camelCase
+            .ToList();
+
+        // Filter the props that are Mergeable and should be merged
+        var mergeProps = _props.GetType().GetProperties().ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props))
+            .Where(kv => kv.Value is Mergeable mergeable && mergeable.ShouldMerge()) // Check if value is Mergeable and should merge
+            .Where(kv => !resetProps.Contains(kv.Key)) // Exclude reset keys
+            .Select(kv => kv.Key.ToCamelCase()) // Convert property name to camelCase
+            .Where(resolvedProps.Contains) // Filter only the props that are in the resolved props
+            .ToList();
+
+        if (mergeProps.Count == 0)
+        {
+            return null;
+        }
+
+        // Return the result
+        return mergeProps;
     }
 }
