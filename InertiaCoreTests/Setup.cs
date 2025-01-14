@@ -1,7 +1,9 @@
 using InertiaCore;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
+using InertiaCore.Utils;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Routing;
@@ -31,9 +33,9 @@ public partial class Tests
     ///     Prepares ActionContext for usage in tests.
     /// </summary>
     /// <param name="headers">Optional request headers.</param>
-    /// <param name="sharedData">Optional Inertia shared data.</param>
+    /// <param name="sharedProps">Optional Inertia shared data.</param>
     /// <param name="modelState">Optional validation errors dictionary.</param>
-    private static ActionContext PrepareContext(HeaderDictionary? headers = null,
+    private static ActionContext PrepareContext(HeaderDictionary? headers = null, InertiaSharedProps? sharedProps = null,
         Dictionary<string, string>? modelState = null)
     {
         var request = new Mock<HttpRequest>();
@@ -42,9 +44,14 @@ public partial class Tests
         var response = new Mock<HttpResponse>();
         response.SetupGet(r => r.Headers).Returns(new HeaderDictionary());
 
+        var features = new FeatureCollection();
+        if (sharedProps != null)
+            features.Set(sharedProps);
+
         var httpContext = new Mock<HttpContext>();
         httpContext.SetupGet(c => c.Request).Returns(request.Object);
         httpContext.SetupGet(c => c.Response).Returns(response.Object);
+        httpContext.SetupGet(c => c.Features).Returns(features);
 
         var context = new ActionContext(httpContext.Object, new RouteData(), new ActionDescriptor());
 

@@ -35,7 +35,6 @@ internal class ResponseFactory : IResponseFactory
     private readonly IOptions<InertiaOptions> _options;
 
     private object? _version;
-    private InertiaSharedData? _sharedProps;
 
     public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
         (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
@@ -43,14 +42,12 @@ internal class ResponseFactory : IResponseFactory
     public Response Render(string component, object? props = null)
     {
         props ??= new { };
-
         var dictProps = props switch
         {
             Dictionary<string, object?> dict => dict,
             _ => props.GetType().GetProperties()
                 .ToDictionary(o => o.Name, o => o.GetValue(props))
         };
-        dictProps = _sharedProps?.GetMerged(dictProps) ?? dictProps;
 
         return new Response(component, dictProps, _options.Value.RootView, GetVersion());
     }
@@ -111,14 +108,24 @@ internal class ResponseFactory : IResponseFactory
 
     public void Share(string key, object? value)
     {
-        _sharedProps ??= new InertiaSharedData();
-        _sharedProps.Set(key, value);
+        var context = _contextAccessor.HttpContext!;
+
+        var sharedData = context.Features.Get<InertiaSharedProps>();
+        sharedData ??= new InertiaSharedProps();
+        sharedData.Set(key, value);
+
+        context.Features.Set(sharedData);
     }
 
     public void Share(IDictionary<string, object?> data)
     {
-        _sharedProps ??= new InertiaSharedData();
-        _sharedProps.Merge(data);
+        var context = _contextAccessor.HttpContext!;
+
+        var sharedData = context.Features.Get<InertiaSharedProps>();
+        sharedData ??= new InertiaSharedProps();
+        sharedData.Merge(data);
+
+        context.Features.Set(sharedData);
     }
 
     public LazyProp Lazy(Func<object?> callback) => new(callback);

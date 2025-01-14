@@ -55,9 +55,22 @@ public class Response : IActionResult
     {
         var props = _props;
 
+        props = ResolveSharedProps(props);
         props = ResolvePartialProperties(props);
         props = ResolveAlways(props);
         props = await ResolvePropertyInstances(props);
+
+        return props;
+    }
+
+    /// <summary>
+    /// Resolve `shared` props stored in the current request context.
+    /// </summary>
+    private Dictionary<string, object?> ResolveSharedProps(Dictionary<string, object?> props)
+    {
+        var shared = _context!.HttpContext.Features.Get<InertiaSharedProps>();
+        if (shared != null)
+            props = shared.GetMerged(props);
 
         return props;
     }
