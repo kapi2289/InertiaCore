@@ -266,7 +266,7 @@ Here's an example for a TypeScript React app with HMR:
 </html>
 ```
 
-with the corresponding `vite.config.js`, which is recommended to create in the root solution directory:
+with the corresponding `vite.config.js`, which is recommended to create in the `ClientApp` directory:
 
 ```js
 import { defineConfig } from "vite";
@@ -278,10 +278,13 @@ export default defineConfig({
   plugins: [
     laravel({
       input: ["src/main.tsx"],
-      publicDirectory: "wwwroot/",
+      publicDirectory: "../wwwroot/",
     }),
     react(),
   ],
+  build: {
+    emptyOutDir: true,
+  },
 });
 ```
 
@@ -306,7 +309,7 @@ Here's an example for a TypeScript Vue app with Hot Reload:
 </html>
 ```
 
-with the corresponding `vite.config.js`, which is recommended to create in the root solution directory:
+with the corresponding `vite.config.js`, which is recommended to create in the `ClientApp` directory:
 
 ```js
 import {defineConfig} from 'vite';
@@ -317,7 +320,7 @@ export default defineConfig({
   plugins: [
     laravel({
       input: ["src/app.ts"],
-      publicDirectory: "wwwroot/",
+      publicDirectory: "../wwwroot/",
       refresh: true,
     }),
     vue({
@@ -329,6 +332,9 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    emptyOutDir: true,
+  },
 });
 ```
 
