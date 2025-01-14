@@ -13,7 +13,7 @@ public partial class Tests
             Test = "Test"
         });
 
-        var context = PrepareContext(null, null, new Dictionary<string, string>
+        var context = PrepareContext(null, new Dictionary<string, string>
         {
             { "Field", "Error" }
         });

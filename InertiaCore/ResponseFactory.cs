@@ -35,6 +35,7 @@ internal class ResponseFactory : IResponseFactory
     private readonly IOptions<InertiaOptions> _options;
 
     private object? _version;
+    private InertiaSharedData? _sharedProps;
 
     public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
         (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
@@ -43,7 +44,15 @@ internal class ResponseFactory : IResponseFactory
     {
         props ??= new { };
 
-        return new Response(component, props, _options.Value.RootView, GetVersion());
+        var dictProps = props switch
+        {
+            Dictionary<string, object?> dict => dict,
+            _ => props.GetType().GetProperties()
+                .ToDictionary(o => o.Name, o => o.GetValue(props))
+        };
+        dictProps = _sharedProps?.GetMerged(dictProps) ?? dictProps;
+
+        return new Response(component, dictProps, _options.Value.RootView, GetVersion());
     }
 
     public async Task<IHtmlContent> Head(dynamic model)
@@ -102,29 +111,19 @@ internal class ResponseFactory : IResponseFactory
 
     public void Share(string key, object? value)
     {
-        var context = _contextAccessor.HttpContext!;
-
-        var sharedData = context.Features.Get<InertiaSharedData>();
-        sharedData ??= new InertiaSharedData();
-        sharedData.Set(key, value);
-
-        context.Features.Set(sharedData);
+        _sharedProps ??= new InertiaSharedData();
+        _sharedProps.Set(key, value);
     }
 
     public void Share(IDictionary<string, object?> data)
     {
-        var context = _contextAccessor.HttpContext!;
-
-        var sharedData = context.Features.Get<InertiaSharedData>();
-        sharedData ??= new InertiaSharedData();
-        sharedData.Merge(data);
-
-        context.Features.Set(sharedData);
+        _sharedProps ??= new InertiaSharedData();
+        _sharedProps.Merge(data);
     }
 
-    public LazyProp Lazy(Func<object?> callback) => new LazyProp(callback);
-    public LazyProp Lazy(Func<Task<object?>> callback) => new LazyProp(callback);
-    public AlwaysProp Always(object? value) => new AlwaysProp(value);
-    public AlwaysProp Always(Func<object?> callback) => new AlwaysProp(callback);
-    public AlwaysProp Always(Func<Task<object?>> callback) => new AlwaysProp(callback);
+    public LazyProp Lazy(Func<object?> callback) => new(callback);
+    public LazyProp Lazy(Func<Task<object?>> callback) => new(callback);
+    public AlwaysProp Always(object? value) => new(value);
+    public AlwaysProp Always(Func<object?> callback) => new(callback);
+    public AlwaysProp Always(Func<Task<object?>> callback) => new(callback);
 }
