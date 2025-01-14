@@ -33,9 +33,9 @@ public partial class Tests
     ///     Prepares ActionContext for usage in tests.
     /// </summary>
     /// <param name="headers">Optional request headers.</param>
-    /// <param name="sharedData">Optional Inertia shared data.</param>
+    /// <param name="sharedProps">Optional Inertia shared data.</param>
     /// <param name="modelState">Optional validation errors dictionary.</param>
-    private static ActionContext PrepareContext(HeaderDictionary? headers = null, InertiaSharedData? sharedData = null,
+    private static ActionContext PrepareContext(HeaderDictionary? headers = null, InertiaSharedProps? sharedProps = null,
         Dictionary<string, string>? modelState = null)
     {
         var request = new Mock<HttpRequest>();
@@ -45,8 +45,8 @@ public partial class Tests
         response.SetupGet(r => r.Headers).Returns(new HeaderDictionary());
 
         var features = new FeatureCollection();
-        if (sharedData != null)
-            features.Set(sharedData);
+        if (sharedProps != null)
+            features.Set(sharedProps);
 
         var httpContext = new Mock<HttpContext>();
         httpContext.SetupGet(c => c.Request).Returns(request.Object);
