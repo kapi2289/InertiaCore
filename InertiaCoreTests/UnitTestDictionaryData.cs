@@ -16,7 +16,7 @@ public partial class Tests
                 ["Key"] = () => "Value",
                 ["KeyAsync"] = () => Task.FromResult("ValueAsync"),
                 ["KeyAsync2"] = Task.FromResult("ValueAsync2"),
-                ["Always"] = () => new Dictionary<string, object>
+                ["Nested"] = () => new Dictionary<string, object>
                 {
                     ["Key"] = () => "Value"
                 }
@@ -40,7 +40,7 @@ public partial class Tests
                     { "keyAsync", "ValueAsync" },
                     { "keyAsync2", "ValueAsync2" },
                     {
-                        "always", new Dictionary<string, object?>
+                        "nested", new Dictionary<string, object?>
                         {
                             { "key", "Value" },
                         }
