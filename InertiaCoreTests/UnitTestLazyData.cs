@@ -71,18 +71,15 @@ public partial class Tests
     [Description("Test if the lazy async data is fetched properly.")]
     public async Task TestLazyAsyncData()
     {
-        var testFunction = new Func<Task<object?>>(async () =>
-        {
-            Assert.Fail();
-            await Task.Delay(100);
-            return "Lazy Async";
-        });
-
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(testFunction)
+            TestLazy = _factory.Lazy(() =>
+            {
+                Assert.Fail();
+                return Task.FromResult<object?>("Lazy Async");
+            })
         });
 
         var context = PrepareContext();
@@ -104,16 +101,10 @@ public partial class Tests
     [Description("Test if the lazy async data is fetched properly with specified partial props.")]
     public async Task TestLazyAsyncPartialData()
     {
-        var testFunction = new Func<Task<string>>(async () =>
-        {
-            await Task.Delay(100);
-            return "Lazy Async";
-        });
-
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(async () => await testFunction())
+            TestLazy = _factory.Lazy(() => Task.FromResult<object?>("Lazy Async"))
         });
 
         var headers = new HeaderDictionary
