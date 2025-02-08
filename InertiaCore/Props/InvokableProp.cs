@@ -1,3 +1,5 @@
+using InertiaCore.Extensions;
+
 namespace InertiaCore.Props;
 
 public class InvokableProp
@@ -10,9 +12,9 @@ public class InvokableProp
     {
         return _value switch
         {
-            Func<Task<object?>> asyncCallable => asyncCallable.Invoke(),
-            Func<object?> callable => Task.Run(() => callable.Invoke()),
-            Task<object?> value => value,
+            Func<object?> f => f.ResolveAsync(),
+            Task t => t.ResolveResult(),
+            InvokableProp p => p.Invoke(),
             _ => Task.FromResult(_value)
         };
     }

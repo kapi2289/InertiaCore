@@ -8,31 +8,6 @@ namespace InertiaCore.Extensions;
 
 internal static class InertiaExtensions
 {
-    internal static Dictionary<string, object?> OnlyProps(this ActionContext context, Dictionary<string, object?> props)
-    {
-        var onlyKeys = context.HttpContext.Request.Headers[InertiaHeader.PartialOnly]
-            .ToString().Split(',')
-            .Select(k => k.Trim())
-            .Where(k => !string.IsNullOrEmpty(k))
-            .ToList();
-
-        return props.Where(kv => onlyKeys.Contains(kv.Key, StringComparer.OrdinalIgnoreCase))
-            .ToDictionary(kv => kv.Key, kv => kv.Value);
-    }
-
-    internal static Dictionary<string, object?> ExceptProps(this ActionContext context,
-        Dictionary<string, object?> props)
-    {
-        var exceptKeys = context.HttpContext.Request.Headers[InertiaHeader.PartialExcept]
-            .ToString().Split(',')
-            .Select(k => k.Trim())
-            .Where(k => !string.IsNullOrEmpty(k))
-            .ToList();
-
-        return props.Where(kv => exceptKeys.Contains(kv.Key, StringComparer.OrdinalIgnoreCase) == false)
-            .ToDictionary(kv => kv.Key, kv => kv.Value);
-    }
-
     internal static bool IsInertiaPartialComponent(this ActionContext context, string component) =>
         context.HttpContext.Request.Headers[InertiaHeader.PartialComponent] == component;
 
@@ -54,5 +29,24 @@ internal static class InertiaExtensions
         dictionary[key] = value;
 
         return true;
+    }
+
+    internal static Task<object?> ResolveAsync(this Func<object?> func)
+    {
+        var rt = func.Method.ReturnType;
+
+        if (!rt.IsGenericType || rt.GetGenericTypeDefinition() != typeof(Task<>))
+            return Task.Run(func.Invoke);
+
+        var task = func.DynamicInvoke() as Task;
+        return task!.ResolveResult();
+    }
+
+    internal static async Task<object?> ResolveResult(this Task task)
+    {
+        await task.ConfigureAwait(false);
+        var result = task.GetType().GetProperty("Result");
+
+        return result?.GetValue(task);
     }
 }

@@ -7,17 +7,17 @@ public partial class Tests
 {
     [Test]
     [Description("Test if shared data is merged with the props properly.")]
-    public async Task TestSharedData()
+    public async Task TestSharedProps()
     {
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test"
         });
 
-        var sharedData = new InertiaSharedData();
-        sharedData.Set("TestShared", "Shared");
+        var sharedProps = new InertiaSharedProps();
+        sharedProps.Set("TestShared", "Shared");
 
-        var context = PrepareContext(null, sharedData);
+        var context = PrepareContext(null, sharedProps);
 
         response.SetContext(context);
         await response.ProcessResponse();

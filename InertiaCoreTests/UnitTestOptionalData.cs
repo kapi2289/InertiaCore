@@ -6,17 +6,17 @@ namespace InertiaCoreTests;
 public partial class Tests
 {
     [Test]
-    [Description("Test if the lazy data is fetched properly.")]
-    public async Task TestLazyData()
+    [Description("Test if the optional data is fetched properly.")]
+    public async Task TestOptionalData()
     {
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() =>
+            TestOptional = _factory.Optional(() =>
             {
                 Assert.Fail();
-                return "Lazy";
+                return "Optional";
             })
         });
 
@@ -36,18 +36,18 @@ public partial class Tests
     }
 
     [Test]
-    [Description("Test if the lazy data is fetched properly with specified partial props.")]
-    public async Task TestLazyPartialData()
+    [Description("Test if the optional data is fetched properly with specified partial props.")]
+    public async Task TestOptionalPartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() => "Lazy")
+            TestOptional = _factory.Optional(() => "Optional")
         });
 
         var headers = new HeaderDictionary
         {
-            { "X-Inertia-Partial-Data", "testFunc,testLazy" },
+            { "X-Inertia-Partial-Data", "testFunc,testOptional" },
             { "X-Inertia-Partial-Component", "Test/Page" }
         };
 
@@ -61,25 +61,28 @@ public partial class Tests
         Assert.That(page?.Props, Is.EqualTo(new Dictionary<string, object?>
         {
             { "testFunc", "Func" },
-            { "testLazy", "Lazy" },
+            { "testOptional", "Optional" },
             { "errors", new Dictionary<string, string>(0) }
         }));
     }
 
 
     [Test]
-    [Description("Test if the lazy async data is fetched properly.")]
-    public async Task TestLazyAsyncData()
+    [Description("Test if the optional async data is fetched properly.")]
+    public async Task TestOptionalAsyncData()
     {
+        var testFunction = new Func<Task<object?>>(async () =>
+        {
+            Assert.Fail();
+            await Task.Delay(100);
+            return "Optional Async";
+        });
+
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() =>
-            {
-                Assert.Fail();
-                return Task.FromResult<object?>("Lazy Async");
-            })
+            TestOptional = _factory.Optional(testFunction)
         });
 
         var context = PrepareContext();
@@ -98,18 +101,24 @@ public partial class Tests
     }
 
     [Test]
-    [Description("Test if the lazy async data is fetched properly with specified partial props.")]
-    public async Task TestLazyAsyncPartialData()
+    [Description("Test if the optional async data is fetched properly with specified partial props.")]
+    public async Task TestOptionalAsyncPartialData()
     {
+        var testFunction = new Func<Task<string>>(async () =>
+        {
+            await Task.Delay(100);
+            return "Optional Async";
+        });
+
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() => Task.FromResult<object?>("Lazy Async"))
+            TestOptional = _factory.Optional(async () => await testFunction())
         });
 
         var headers = new HeaderDictionary
         {
-            { "X-Inertia-Partial-Data", "testFunc,testLazy" },
+            { "X-Inertia-Partial-Data", "testFunc,testOptional" },
             { "X-Inertia-Partial-Component", "Test/Page" }
         };
 
@@ -123,7 +132,7 @@ public partial class Tests
         Assert.That(page?.Props, Is.EqualTo(new Dictionary<string, object?>
         {
             { "testFunc", "Func" },
-            { "testLazy", "Lazy Async" },
+            { "testOptional", "Optional Async" },
             { "errors", new Dictionary<string, string>(0) }
         }));
     }
