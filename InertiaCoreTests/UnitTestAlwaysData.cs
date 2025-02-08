@@ -67,17 +67,11 @@ public partial class Tests
     [Description("Test if the always async data is fetched properly.")]
     public async Task TestAlwaysAsyncData()
     {
-        var testFunction = new Func<Task<object?>>(async () =>
-        {
-            await Task.Delay(100);
-            return "Always Async";
-        });
-
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestAlways = _factory.Always(testFunction)
+            TestAlways = _factory.Always(() => Task.FromResult<object?>("Always Async"))
         });
 
         var context = PrepareContext();
@@ -100,16 +94,10 @@ public partial class Tests
     [Description("Test if the always async data is fetched properly with specified partial props.")]
     public async Task TestAlwaysAsyncPartialData()
     {
-        var testFunction = new Func<Task<string>>(async () =>
-        {
-            await Task.Delay(100);
-            return "Always Async";
-        });
-
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestAlways = _factory.Always(async () => await testFunction())
+            TestAlways = _factory.Always(() => Task.FromResult<object?>("Always Async"))
         });
 
         var headers = new HeaderDictionary
@@ -137,16 +125,10 @@ public partial class Tests
     [Description("Test if the always async data is fetched properly without specified partial props.")]
     public async Task TestAlwaysAsyncPartialDataOmitted()
     {
-        var testFunction = new Func<Task<string>>(async () =>
-        {
-            await Task.Delay(100);
-            return "Always Async";
-        });
-
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestAlways = _factory.Always(async () => await testFunction())
+            TestAlways = _factory.Always(() => Task.FromResult<object?>("Always Async"))
         });
 
         var headers = new HeaderDictionary

@@ -13,7 +13,7 @@ namespace InertiaCore;
 public class Response : IActionResult
 {
     private readonly string _component;
-    private readonly object _props;
+    private readonly Dictionary<string, object?> _props;
     private readonly string _rootView;
     private readonly string? _version;
 
@@ -21,47 +21,149 @@ public class Response : IActionResult
     private Page? _page;
     private IDictionary<string, object>? _viewData;
 
-    public Response(string component, object props, string rootView, string? version)
+    internal Response(string component, Dictionary<string, object?> props, string rootView, string? version)
         => (_component, _props, _rootView, _version) = (component, props, rootView, version);
 
     public async Task ExecuteResultAsync(ActionContext context)
     {
         SetContext(context);
         await ProcessResponse();
-
         await GetResult().ExecuteResultAsync(_context!);
     }
 
     protected internal async Task ProcessResponse()
     {
+        var props = await ResolveProperties();
+
         var page = new Page
         {
             Component = _component,
             Version = _version,
             Url = _context!.RequestedUri(),
-            Props = await ResolveProperties(_props.GetType().GetProperties()
-                .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props)))
+            Props = props
         };
-
-        var shared = _context!.HttpContext.Features.Get<InertiaSharedData>();
-        if (shared != null)
-            page.Props = shared.GetMerged(page.Props);
 
         page.Props["errors"] = GetErrors();
 
         SetPage(page);
     }
 
-    private static async Task<Dictionary<string, object?>> PrepareProps(Dictionary<string, object?> props)
+    /// <summary>
+    /// Resolve the properties for the response.
+    /// </summary>
+    private async Task<Dictionary<string, object?>> ResolveProperties()
     {
-        return (await Task.WhenAll(props.Select(async pair => pair.Value switch
+        var props = _props;
+
+        props = ResolveSharedProps(props);
+        props = ResolvePartialProperties(props);
+        props = ResolveAlways(props);
+        props = await ResolvePropertyInstances(props);
+
+        return props;
+    }
+
+    /// <summary>
+    /// Resolve `shared` props stored in the current request context.
+    /// </summary>
+    private Dictionary<string, object?> ResolveSharedProps(Dictionary<string, object?> props)
+    {
+        var shared = _context!.HttpContext.Features.Get<InertiaSharedProps>();
+        if (shared != null)
+            props = shared.GetMerged(props);
+
+        return props;
+    }
+
+    /// <summary>
+    /// Resolve the `only` and `except` partial request props.
+    /// </summary>
+    private Dictionary<string, object?> ResolvePartialProperties(Dictionary<string, object?> props)
+    {
+        var isPartial = _context!.IsInertiaPartialComponent(_component);
+
+        if (!isPartial)
+            return props
+                .Where(kv => kv.Value is not IIgnoresFirstLoad)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialOnly))
+            props = ResolveOnly(props);
+
+        if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialExcept))
+            props = ResolveExcept(props);
+
+        return props;
+    }
+
+    /// <summary>
+    /// Resolve the `only` partial request props.
+    /// </summary>
+    private Dictionary<string, object?> ResolveOnly(Dictionary<string, object?> props)
+    {
+        var onlyKeys = _context!.HttpContext.Request.Headers[InertiaHeader.PartialOnly]
+            .ToString().Split(',')
+            .Select(k => k.Trim())
+            .Where(k => !string.IsNullOrEmpty(k))
+            .ToList();
+
+        return props.Where(kv => onlyKeys.Contains(kv.Key, StringComparer.OrdinalIgnoreCase))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    /// <summary>
+    /// Resolve the `except` partial request props.
+    /// </summary>
+    private Dictionary<string, object?> ResolveExcept(Dictionary<string, object?> props)
+    {
+        var exceptKeys = _context!.HttpContext.Request.Headers[InertiaHeader.PartialExcept]
+            .ToString().Split(',')
+            .Select(k => k.Trim())
+            .Where(k => !string.IsNullOrEmpty(k))
+            .ToList();
+
+        return props.Where(kv => exceptKeys.Contains(kv.Key, StringComparer.OrdinalIgnoreCase) == false)
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    /// <summary>
+    /// Resolve `always` properties that should always be included on all visits, regardless of "only" or "except" requests.
+    /// </summary>
+    private Dictionary<string, object?> ResolveAlways(Dictionary<string, object?> props)
+    {
+        var alwaysProps = _props.Where(o => o.Value is AlwaysProp);
+
+        return props
+            .Where(kv => kv.Value is not AlwaysProp)
+            .Concat(alwaysProps).ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    /// <summary>
+    /// Resolve all necessary class instances in the given props.
+    /// </summary>
+    private static async Task<Dictionary<string, object?>> ResolvePropertyInstances(Dictionary<string, object?> props)
+    {
+        return (await Task.WhenAll(props.Select(async pair =>
         {
-            Func<object?> f => (pair.Key, f.Invoke()),
-            LazyProp l => (pair.Key, await l.Invoke()),
-            OptionalProp o => (pair.Key, await o.Invoke()),
-            AlwaysProp l => (pair.Key, await l.Invoke()),
-            _ => (pair.Key, pair.Value)
-        }))).ToDictionary(pair => pair.Key, pair => pair.Item2);
+            var key = pair.Key.ToCamelCase();
+
+            var value = pair.Value switch
+            {
+                Func<object?> f => (key, await f.ResolveAsync()),
+                Task t => (key, await t.ResolveResult()),
+                InvokableProp p => (key, await p.Invoke()),
+                _ => (key, pair.Value)
+            };
+
+            if (value.Item2 is Dictionary<string, object?> dict)
+            {
+                value = (key, await ResolvePropertyInstances(dict));
+            }
+
+            return value;
+        }))).ToDictionary(pair => pair.key, pair => pair.Item2);
     }
 
     protected internal JsonResult GetJson()
@@ -94,7 +196,7 @@ public class Response : IActionResult
 
     protected internal IActionResult GetResult() => _context!.IsInertiaRequest() ? GetJson() : GetView();
 
-    private IDictionary<string, string> GetErrors()
+    private Dictionary<string, string> GetErrors()
     {
         if (!_context!.ModelState.IsValid)
             return _context!.ModelState.ToDictionary(o => o.Key.ToCamelCase(),
@@ -111,49 +213,5 @@ public class Response : IActionResult
     {
         _viewData = viewData;
         return this;
-    }
-
-    private async Task<Dictionary<string, object?>> ResolveProperties(Dictionary<string, object?> props)
-    {
-        var isPartial = _context!.IsInertiaPartialComponent(_component);
-
-        if (!isPartial)
-        {
-            props = props
-                .Where(kv => kv.Value is not IIgnoresFirstLoad)
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
-        }
-        else
-        {
-            props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
-
-            if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialOnly))
-                props = ResolveOnly(props);
-
-            if (_context!.HttpContext.Request.Headers.ContainsKey(InertiaHeader.PartialExcept))
-                props = ResolveExcept(props);
-        }
-
-        props = ResolveAlways(props);
-        props = await PrepareProps(props);
-
-        return props;
-    }
-
-    private Dictionary<string, object?> ResolveOnly(Dictionary<string, object?> props)
-        => _context!.OnlyProps(props);
-
-    private Dictionary<string, object?> ResolveExcept(Dictionary<string, object?> props)
-        => _context!.ExceptProps(props);
-
-    private Dictionary<string, object?> ResolveAlways(Dictionary<string, object?> props)
-    {
-        var alwaysProps = _props.GetType().GetProperties()
-            .Where(o => o.PropertyType == typeof(AlwaysProp))
-            .ToDictionary(o => o.Name.ToCamelCase(), o => o.GetValue(_props));
-
-        return props
-            .Where(kv => kv.Value is not AlwaysProp)
-            .Concat(alwaysProps).ToDictionary(kv => kv.Key, kv => kv.Value);
     }
 }
