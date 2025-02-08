@@ -266,36 +266,23 @@ Here's an example for a TypeScript React app with HMR:
 </html>
 ```
 
-And here is the corresponding `vite.config.js`
+with the corresponding `vite.config.js`, which is recommended to create in the `ClientApp` directory:
 
 ```js
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import laravel from "laravel-vite-plugin";
-import path from "path";
-import { mkdirSync } from "fs";
-
-// Auto-initialize the default output directory
-const outDir = "../wwwroot/build";
-
-mkdirSync(outDir, { recursive: true });
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     laravel({
       input: ["src/main.tsx"],
-      publicDirectory: outDir,
+      publicDirectory: "../wwwroot/",
     }),
     react(),
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
-  },
   build: {
-    outDir,
     emptyOutDir: true,
   },
 });
@@ -322,24 +309,18 @@ Here's an example for a TypeScript Vue app with Hot Reload:
 </html>
 ```
 
-And here is the corresponding `vite.config.js`
+with the corresponding `vite.config.js`, which is recommended to create in the `ClientApp` directory:
 
 ```js
 import {defineConfig} from 'vite';
 import vue from '@vitejs/plugin-vue';
 import laravel from "laravel-vite-plugin";
-import path from "path";
-import {mkdirSync} from "fs";
-
-const outDir = "../wwwroot/build";
-
-mkdirSync(outDir, {recursive: true});
 
 export default defineConfig({
   plugins: [
     laravel({
       input: ["src/app.ts"],
-      publicDirectory: outDir,
+      publicDirectory: "../wwwroot/",
       refresh: true,
     }),
     vue({
@@ -351,13 +332,7 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
-  },
   build: {
-    outDir,
     emptyOutDir: true,
   },
 });
