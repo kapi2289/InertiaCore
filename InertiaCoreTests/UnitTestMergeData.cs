@@ -180,6 +180,8 @@ public partial class Tests
         Assert.That(page?.MergeProps, Is.EqualTo(null));
     }
 
+    [Test]
+    [Description("Test if the merge async data is fetched properly without specified partial props.")]
     public async Task TestNoMergeProps()
     {
         var response = _factory.Render("Test/Page", new
