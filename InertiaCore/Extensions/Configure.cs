@@ -18,7 +18,11 @@ public static class Configure
         Inertia.UseFactory(factory);
 
         var viteBuilder = app.ApplicationServices.GetService<IViteBuilder>();
-        if (viteBuilder != null) Vite.UseBuilder(viteBuilder);
+        if (viteBuilder != null)
+        {
+            Vite.UseBuilder(viteBuilder);
+            Inertia.Version(() => Vite.GetManifestHash());
+        }
 
         app.Use(async (context, next) =>
         {

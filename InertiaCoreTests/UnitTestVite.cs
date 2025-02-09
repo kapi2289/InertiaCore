@@ -4,7 +4,10 @@ using InertiaCore.Models;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InertiaCoreTests;
 
@@ -14,8 +17,6 @@ public partial class Tests
     [Description("Test if the Vite configuration registers properly the service.")]
     public void TestViteConfiguration()
     {
-        Assert.Throws<NullReferenceException>(() => Vite.ReactRefresh());
-
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddInertia();
 
@@ -208,5 +209,48 @@ public partial class Tests
         Assert.That(result.ToString(), Is.EqualTo(
             "<script src=\"http://127.0.0.1:5174/@vite/client\" type=\"module\"></script>\n\t" +
             "<script src=\"http://127.0.0.1:5174/index.scss\" type=\"module\"></script>\n\t"));
+    }
+
+    [Test]
+    [Description("Test if the vite version is read properly.")]
+    public async Task TestViteVersion()
+    {
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
+        var options = new Mock<IOptions<ViteOptions>>();
+        options.SetupGet(x => x.Value).Returns(new ViteOptions());
+
+        var mock = new Mock<ViteBuilder>(options.Object);
+        mock.Object.UseFileSystem(fileSystem);
+        Vite.UseBuilder(mock.Object);
+
+        fileSystem.AddFile(@"/wwwroot/build/manifest.json",
+            new MockFileData("{\"app.tsx\": {\"file\": \"assets/main-19038c6a.js\"}}"));
+
+        _factory.Version(() => Vite.GetManifestHash());
+
+        var response = _factory.Render("Test/Page", new
+        {
+            Test = "Test"
+        });
+
+        var headers = new HeaderDictionary
+        {
+            { "X-Inertia", "true" }
+        };
+
+        var context = PrepareContext(headers);
+
+        response.SetContext(context);
+        await response.ProcessResponse();
+
+        var result = response.GetResult();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.InstanceOf(typeof(JsonResult)));
+
+            var json = (result as JsonResult)?.Value;
+            Assert.That((json as Page)?.Version, Is.EqualTo("bba1afd1066309f4a69430e0c446ba8d"));
+        });
     }
 }

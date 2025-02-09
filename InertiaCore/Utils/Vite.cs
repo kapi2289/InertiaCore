@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.IO.Abstractions;
 using InertiaCore.Models;
 using Microsoft.Extensions.Options;
+using InertiaCore.Extensions;
 
 namespace InertiaCore.Utils;
 
@@ -13,6 +14,7 @@ public interface IViteBuilder
 {
     HtmlString ReactRefresh();
     HtmlString Input(string path);
+    string? GetManifest();
 }
 
 internal class ViteBuilder : IViteBuilder
@@ -205,6 +207,16 @@ internal class ViteBuilder : IViteBuilder
         content.WriteTo(writer, HtmlEncoder.Default);
         return writer.ToString();
     }
+
+    public string? GetManifest()
+    {
+        if (_fileSystem.File.Exists(GetPublicPathForFile(_options.Value.ManifestFilename)))
+        {
+            return _fileSystem.File.ReadAllText(GetPublicPathForFile(_options.Value.ManifestFilename));
+        }
+
+        return null;
+    }
 }
 
 public static class Vite
@@ -222,4 +234,9 @@ public static class Vite
     /// Generate React refresh runtime script.
     /// </summary>
     public static HtmlString ReactRefresh() => _instance.ReactRefresh();
+
+    /// <summary>
+    /// Generate the Manifest hash.
+    /// </summary>
+    public static string? GetManifestHash() => _instance.GetManifest()?.MD5();
 }
