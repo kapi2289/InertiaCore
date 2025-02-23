@@ -3,11 +3,10 @@ using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Moq;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace InertiaCoreTests;
 
@@ -73,7 +72,8 @@ public partial class Tests
     }
 
     [Test]
-    [Description("Test if the Vite Helper handles generating HTML tags for both JS and CSS from HMR and the manifest properly.")]
+    [Description(
+        "Test if the Vite Helper handles generating HTML tags for both JS and CSS from HMR and the manifest properly.")]
     public void TestViteInput()
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
@@ -226,7 +226,7 @@ public partial class Tests
         fileSystem.AddFile(@"/wwwroot/build/manifest.json",
             new MockFileData("{\"app.tsx\": {\"file\": \"assets/main-19038c6a.js\"}}"));
 
-        _factory.Version(() => Vite.GetManifestHash());
+        _factory.Version(Vite.GetManifestHash);
 
         var response = _factory.Render("Test/Page", new
         {
@@ -247,7 +247,7 @@ public partial class Tests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result, Is.InstanceOf(typeof(JsonResult)));
+            Assert.That(result, Is.InstanceOf<JsonResult>());
 
             var json = (result as JsonResult)?.Value;
             Assert.That((json as Page)?.Version, Is.EqualTo("bba1afd1066309f4a69430e0c446ba8d"));

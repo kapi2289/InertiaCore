@@ -80,12 +80,11 @@ internal class ViteBuilder : IViteBuilder
             throw new Exception("Vite Manifest is invalid. Run `npm run build` and try again.");
         }
 
-        if (!manifestJson.ContainsKey(path))
+        if (!manifestJson.TryGetValue(path, out var obj))
         {
             throw new Exception("Asset not found in manifest: " + path);
         }
 
-        var obj = manifestJson[path];
         var filePath = obj.GetProperty("file");
 
         if (IsCssPath(filePath.ToString()))
@@ -223,12 +222,9 @@ internal class ViteBuilder : IViteBuilder
 
     public string? GetManifest()
     {
-        if (_fileSystem.File.Exists(GetBuildPathForFile(_options.Value.ManifestFilename)))
-        {
-            return _fileSystem.File.ReadAllText(GetBuildPathForFile(_options.Value.ManifestFilename));
-        }
-
-        return null;
+        return _fileSystem.File.Exists(GetPublicPathForFile(_options.Value.ManifestFilename))
+            ? _fileSystem.File.ReadAllText(GetPublicPathForFile(_options.Value.ManifestFilename))
+            : null;
     }
 }
 

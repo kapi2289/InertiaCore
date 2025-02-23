@@ -19,7 +19,9 @@ public static class Inertia
 
     public static Task<IHtmlContent> Html(dynamic model) => _factory.Html(model);
 
-    public static void Version(object? version) => _factory.Version(version);
+    public static void Version(string? version) => _factory.Version(version);
+
+    public static void Version(Func<string?> version) => _factory.Version(version);
 
     public static string? GetVersion() => _factory.GetVersion();
 
@@ -29,9 +31,9 @@ public static class Inertia
 
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
 
-    public static AlwaysProp Always(object? value) => _factory.Always(value);
+    public static AlwaysProp Always(string value) => _factory.Always(value);
 
-    public static AlwaysProp Always(Func<object?> callback) => _factory.Always(callback);
+    public static AlwaysProp Always(Func<string> callback) => _factory.Always(callback);
 
     public static AlwaysProp Always(Func<Task<object?>> callback) => _factory.Always(callback);
 
