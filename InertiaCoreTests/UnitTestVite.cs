@@ -37,7 +37,7 @@ public partial class Tests
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
         {
-            { @"/wwwroot/build/hot", new MockFileData("http://127.0.0.1:5174") },
+            { @"/wwwroot/hot", new MockFileData("http://127.0.0.1:5174") },
         });
         var options = new Mock<IOptions<ViteOptions>>();
         options.SetupGet(x => x.Value).Returns(new ViteOptions());
@@ -130,13 +130,12 @@ public partial class Tests
         result = mock.Object.Input("index.scss");
         Assert.That(result.ToString(), Is.EqualTo("<link href=\"/assets/index.css\" rel=\"stylesheet\" />\n\t"));
 
-
         // Hot file with css import
         options.SetupGet(x => x.Value).Returns(new ViteOptions
         {
             BuildDirectory = "build"
         });
-        fileSystem.AddFile(@"/wwwroot/build/hot", new MockFileData("http://127.0.0.1:5174"));
+        fileSystem.AddFile(@"/wwwroot/hot", new MockFileData("http://127.0.0.1:5174"));
 
         result = mock.Object.Input("index.scss");
         Assert.That(result.ToString(), Is.EqualTo(
