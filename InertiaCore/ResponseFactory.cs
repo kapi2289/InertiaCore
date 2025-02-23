@@ -22,6 +22,8 @@ internal interface IResponseFactory
     public LocationResult Location(string url);
     public void Share(string key, object? value);
     public void Share(IDictionary<string, object?> data);
+    public void ClearHistory(bool clear = true);
+    public void EncryptHistory(bool encrypt = true);
     public AlwaysProp Always(object? value);
     public AlwaysProp Always(Func<object?> callback);
     public AlwaysProp Always(Func<Task<object?>> callback);
@@ -36,6 +38,8 @@ internal class ResponseFactory : IResponseFactory
     private readonly IOptions<InertiaOptions> _options;
 
     private object? _version;
+    private bool _clearHistory;
+    private bool? _encryptHistory;
 
     public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
         (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
@@ -50,7 +54,7 @@ internal class ResponseFactory : IResponseFactory
                 .ToDictionary(o => o.Name, o => o.GetValue(props))
         };
 
-        return new Response(component, dictProps, _options.Value.RootView, GetVersion());
+        return new Response(component, dictProps, _options.Value.RootView, GetVersion(), _encryptHistory ?? _options.Value.EncryptHistory, _clearHistory);
     }
 
     public async Task<IHtmlContent> Head(dynamic model)
@@ -130,6 +134,10 @@ internal class ResponseFactory : IResponseFactory
 
         context.Features.Set(sharedData);
     }
+
+    public void ClearHistory(bool clear = true) => _clearHistory = clear;
+
+    public void EncryptHistory(bool encrypt = true) => _encryptHistory = encrypt;
 
     public LazyProp Lazy(Func<object?> callback) => new(callback);
     public LazyProp Lazy(Func<Task<object?>> callback) => new(callback);
