@@ -37,10 +37,8 @@ internal class ResponseFactory : IResponseFactory
     private readonly IOptions<InertiaOptions> _options;
 
     private object? _version;
-
-    protected bool clearHistory = false;
-
-    protected bool? encryptHistory;
+    private bool _clearHistory;
+    private bool? _encryptHistory;
 
     public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
         (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
@@ -55,7 +53,7 @@ internal class ResponseFactory : IResponseFactory
                 .ToDictionary(o => o.Name, o => o.GetValue(props))
         };
 
-        return new Response(component, dictProps, _options.Value.RootView, GetVersion(), encryptHistory ?? _options.Value.EncryptHistory, clearHistory);
+        return new Response(component, dictProps, _options.Value.RootView, GetVersion(), _encryptHistory ?? _options.Value.EncryptHistory, _clearHistory);
     }
 
     public async Task<IHtmlContent> Head(dynamic model)
@@ -134,15 +132,9 @@ internal class ResponseFactory : IResponseFactory
         context.Features.Set(sharedData);
     }
 
-    public void ClearHistory(bool clear = true)
-    {
-        clearHistory = clear;
-    }
+    public void ClearHistory(bool clear = true) => _clearHistory = clear;
 
-    public void EncryptHistory(bool encrypt = true)
-    {
-        encryptHistory = encrypt;
-    }
+    public void EncryptHistory(bool encrypt = true) => _encryptHistory = encrypt;
 
     public LazyProp Lazy(Func<object?> callback) => new(callback);
     public LazyProp Lazy(Func<Task<object?>> callback) => new(callback);

@@ -8,7 +8,7 @@ public partial class Tests
 {
     [Test]
     [Description("Test if history encryption is sent correctly.")]
-    public void TestHistoryEncryptionResult()
+    public async Task TestHistoryEncryptionResult()
     {
         _factory.EncryptHistory();
 
@@ -25,16 +25,16 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var result = response.GetResult();
 
         Assert.Multiple(() =>
         {
-            Assert.That(result, Is.InstanceOf(typeof(JsonResult)));
+            Assert.That(result, Is.InstanceOf<JsonResult>());
 
             var json = (result as JsonResult)?.Value;
-            Assert.That(json, Is.InstanceOf(typeof(Page)));
+            Assert.That(json, Is.InstanceOf<Page>());
 
             Assert.That((json as Page)?.ClearHistory, Is.EqualTo(false));
             Assert.That((json as Page)?.EncryptHistory, Is.EqualTo(true));
@@ -49,7 +49,7 @@ public partial class Tests
 
     [Test]
     [Description("Test if clear history is sent correctly.")]
-    public void TestClearHistoryResult()
+    public async Task TestClearHistoryResult()
     {
         _factory.ClearHistory();
 
@@ -66,16 +66,16 @@ public partial class Tests
         var context = PrepareContext(headers);
 
         response.SetContext(context);
-        response.ProcessResponse();
+        await response.ProcessResponse();
 
         var result = response.GetResult();
 
         Assert.Multiple(() =>
         {
-            Assert.That(result, Is.InstanceOf(typeof(JsonResult)));
+            Assert.That(result, Is.InstanceOf<JsonResult>());
 
             var json = (result as JsonResult)?.Value;
-            Assert.That(json, Is.InstanceOf(typeof(Page)));
+            Assert.That(json, Is.InstanceOf<Page>());
 
             Assert.That((json as Page)?.ClearHistory, Is.EqualTo(true));
             Assert.That((json as Page)?.EncryptHistory, Is.EqualTo(false));
