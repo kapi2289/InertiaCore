@@ -222,8 +222,8 @@ internal class ViteBuilder : IViteBuilder
 
     public string? GetManifest()
     {
-        return _fileSystem.File.Exists(GetPublicPathForFile(_options.Value.ManifestFilename))
-            ? _fileSystem.File.ReadAllText(GetPublicPathForFile(_options.Value.ManifestFilename))
+        return _fileSystem.File.Exists(GetBuildPathForFile(_options.Value.ManifestFilename))
+            ? _fileSystem.File.ReadAllText(GetBuildPathForFile(_options.Value.ManifestFilename))
             : null;
     }
 }

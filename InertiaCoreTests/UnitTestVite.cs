@@ -130,7 +130,6 @@ public partial class Tests
         result = mock.Object.Input("index.scss");
         Assert.That(result.ToString(), Is.EqualTo("<link href=\"/assets/index.css\" rel=\"stylesheet\" />\n\t"));
 
-
         // Hot file with css import
         options.SetupGet(x => x.Value).Returns(new ViteOptions
         {
