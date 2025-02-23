@@ -3,6 +3,7 @@ using InertiaCore.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace InertiaCore.Extensions;
 
@@ -48,5 +49,18 @@ internal static class InertiaExtensions
         var result = task.GetType().GetProperty("Result");
 
         return result?.GetValue(task);
+    }
+
+    internal static string MD5(this string s)
+    {
+        using var md5 = System.Security.Cryptography.MD5.Create();
+        var inputBytes = Encoding.UTF8.GetBytes(s);
+        var hashBytes = md5.ComputeHash(inputBytes);
+
+        var sb = new StringBuilder();
+        foreach (var t in hashBytes)
+            sb.Append(t.ToString("x2"));
+
+        return sb.ToString();
     }
 }
