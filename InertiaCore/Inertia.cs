@@ -40,4 +40,14 @@ public static class Inertia
     public static LazyProp Lazy(Func<object?> callback) => _factory.Lazy(callback);
 
     public static LazyProp Lazy(Func<Task<object?>> callback) => _factory.Lazy(callback);
+
+    public static OptionalProp Optional(Func<object?> callback) => _factory.Optional(callback);
+
+    public static OptionalProp Optional(Func<Task<object?>> callback) => _factory.Optional(callback);
+
+    public static MergeProp Merge(object? value) => _factory.Merge(value);
+
+    public static MergeProp Merge(Func<object?> callback) => _factory.Merge(callback);
+
+    public static MergeProp Merge(Func<Task<object?>> callback) => _factory.Merge(callback);
 }

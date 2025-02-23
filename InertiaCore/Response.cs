@@ -47,6 +47,7 @@ public class Response : IActionResult
             ClearHistory = _clearHistory,
         };
 
+        page.MergeProps = ResolveMergeProps(props);
         page.Props["errors"] = GetErrors();
 
         SetPage(page);
@@ -88,7 +89,7 @@ public class Response : IActionResult
 
         if (!isPartial)
             return props
-                .Where(kv => kv.Value is not LazyProp)
+                .Where(kv => kv.Value is not IIgnoresFirstLoad)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
         props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -142,6 +143,40 @@ public class Response : IActionResult
         return props
             .Where(kv => kv.Value is not AlwaysProp)
             .Concat(alwaysProps).ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    /// <summary>
+    /// Resolve `merge` properties that should be appended to the existing values by the front-end.
+    /// </summary>
+    private List<string>? ResolveMergeProps(Dictionary<string, object?> props)
+    {
+        // Parse the "RESET" header into a collection of keys to reset
+        var resetProps = new HashSet<string>(
+           _context!.HttpContext.Request.Headers[InertiaHeader.Reset]
+               .ToString()
+               .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+               .Select(s => s.Trim()),
+           StringComparer.OrdinalIgnoreCase
+       );
+
+        var resolvedProps = props
+            .Select(kv => kv.Key.ToCamelCase()) // Convert property name to camelCase
+            .ToList();
+
+        // Filter the props that are Mergeable and should be merged
+        var mergeProps = _props.Where(o => o.Value is Mergeable mergeable && mergeable.ShouldMerge()) // Check if value is Mergeable and should merge
+            .Where(kv => !resetProps.Contains(kv.Key)) // Exclude reset keys
+            .Select(kv => kv.Key.ToCamelCase()) // Convert property name to camelCase
+            .Where(resolvedProps.Contains) // Filter only the props that are in the resolved props
+            .ToList();
+
+        if (mergeProps.Count == 0)
+        {
+            return null;
+        }
+
+        // Return the result
+        return mergeProps;
     }
 
     /// <summary>
