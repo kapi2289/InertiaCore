@@ -16,7 +16,8 @@ internal interface IResponseFactory
     public Response Render(string component, object? props = null);
     public Task<IHtmlContent> Head(dynamic model);
     public Task<IHtmlContent> Html(dynamic model);
-    public void Version(object? version);
+    public void Version(string? version);
+    public void Version(Func<string?> version);
     public string? GetVersion();
     public LocationResult Location(string url);
     public void Share(string key, object? value);
@@ -95,7 +96,9 @@ internal class ResponseFactory : IResponseFactory
         return new HtmlString($"<div id=\"app\" data-page=\"{encoded}\"></div>");
     }
 
-    public void Version(object? version) => _version = version;
+    public void Version(string? version) => _version = version;
+
+    public void Version(Func<string?> version) => _version = version;
 
     public string? GetVersion() => _version switch
     {

@@ -21,7 +21,7 @@ public static class Configure
         if (viteBuilder != null)
         {
             Vite.UseBuilder(viteBuilder);
-            Inertia.Version(() => Vite.GetManifestHash());
+            Inertia.Version(Vite.GetManifestHash);
         }
 
         app.Use(async (context, next) =>
