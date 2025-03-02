@@ -88,7 +88,7 @@ public class Response : IActionResult
 
         if (!isPartial)
             return props
-                .Where(kv => kv.Value is not LazyProp)
+                .Where(kv => kv.Value is not IIgnoresFirstLoad)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
         props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
