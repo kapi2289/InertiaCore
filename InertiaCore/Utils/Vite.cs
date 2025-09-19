@@ -176,7 +176,7 @@ internal class ViteBuilder : IViteBuilder
     /// </summary>
     private string HotAsset(string path)
     {
-        var hotFilePath = GetPublicPathForFile(_options.Value.HotFile);
+        var hotFilePath = GetBuildPathForFile(_options.Value.HotFile);
         var hotContents = _fileSystem.File.ReadAllText(hotFilePath);
 
         return hotContents + "/" + path;
@@ -207,7 +207,7 @@ internal class ViteBuilder : IViteBuilder
     /// </summary>
     private bool IsRunningHot()
     {
-        return _fileSystem.File.Exists(GetPublicPathForFile(_options.Value.HotFile));
+        return _fileSystem.File.Exists(GetBuildPathForFile(_options.Value.HotFile));
     }
 
     /// <summary>
