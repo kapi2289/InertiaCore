@@ -17,14 +17,13 @@ public class Response : IActionResult
     private readonly string _rootView;
     private readonly string? _version;
     private readonly bool _encryptHistory;
-    private readonly bool _clearHistory;
 
     private ActionContext? _context;
     private Page? _page;
     private IDictionary<string, object>? _viewData;
 
-    internal Response(string component, Dictionary<string, object?> props, string rootView, string? version, bool encryptHistory, bool clearHistory)
-        => (_component, _props, _rootView, _version, _encryptHistory, _clearHistory) = (component, props, rootView, version, encryptHistory, clearHistory);
+    internal Response(string component, Dictionary<string, object?> props, string rootView, string? version, bool encryptHistory)
+        => (_component, _props, _rootView, _version, _encryptHistory) = (component, props, rootView, version, encryptHistory);
 
     public async Task ExecuteResultAsync(ActionContext context)
     {
@@ -37,6 +36,23 @@ public class Response : IActionResult
     {
         var props = await ResolveProperties();
 
+        // Pull clearHistory from session storage
+        var clearHistory = false;
+
+        try
+        {
+            var session = _context!.HttpContext.Session;
+            if (session != null && session.TryGetValue("inertia.clear_history", out _))
+            {
+                clearHistory = true;
+                session.Remove("inertia.clear_history");
+            }
+        }
+        catch
+        {
+            // Session not available, clearHistory will remain false
+        }
+
         var page = new Page
         {
             Component = _component,
@@ -44,7 +60,7 @@ public class Response : IActionResult
             Url = _context!.RequestedUri(),
             Props = props,
             EncryptHistory = _encryptHistory,
-            ClearHistory = _clearHistory,
+            ClearHistory = clearHistory,
         };
 
         page.Props["errors"] = GetErrors();

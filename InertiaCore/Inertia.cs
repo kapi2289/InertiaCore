@@ -40,4 +40,8 @@ public static class Inertia
     public static LazyProp Lazy(Func<object?> callback) => _factory.Lazy(callback);
 
     public static LazyProp Lazy(Func<Task<object?>> callback) => _factory.Lazy(callback);
+
+    public static void ClearHistory(bool clear = true) => _factory.ClearHistory(clear);
+
+    public static void EncryptHistory(bool encrypt = true) => _factory.EncryptHistory(encrypt);
 }
