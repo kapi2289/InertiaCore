@@ -4,6 +4,7 @@ using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Props;
 using InertiaCore.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -60,9 +61,10 @@ public class Response : IActionResult
         var props = _props;
 
         props = ResolveSharedProps(props);
+        props = ResolveInertiaPropertyProviders(props);
         props = ResolvePartialProperties(props);
         props = ResolveAlways(props);
-        props = await ResolvePropertyInstances(props);
+        props = await ResolvePropertyInstances(props, _context!.HttpContext.Request);
 
         return props;
     }
@@ -75,6 +77,32 @@ public class Response : IActionResult
         var shared = _context!.HttpContext.Features.Get<InertiaSharedProps>();
         if (shared != null)
             props = shared.GetMerged(props);
+
+        return props;
+    }
+
+    /// <summary>
+    /// Resolve properties from objects implementing ProvidesInertiaProperties.
+    /// </summary>
+    private Dictionary<string, object?> ResolveInertiaPropertyProviders(Dictionary<string, object?> props)
+    {
+        var context = new RenderContext(_component, _context!.HttpContext.Request);
+
+        foreach (var pair in props.ToList())
+        {
+            if (pair.Value is ProvidesInertiaProperties provider)
+            {
+                // Remove the provider object itself
+                props.Remove(pair.Key);
+
+                // Add the properties it provides
+                var providedProps = provider.ToInertiaProperties(context);
+                foreach (var providedProp in providedProps)
+                {
+                    props[providedProp.Key] = providedProp.Value;
+                }
+            }
+        }
 
         return props;
     }
@@ -147,7 +175,7 @@ public class Response : IActionResult
     /// <summary>
     /// Resolve all necessary class instances in the given props.
     /// </summary>
-    private static async Task<Dictionary<string, object?>> ResolvePropertyInstances(Dictionary<string, object?> props)
+    private static async Task<Dictionary<string, object?>> ResolvePropertyInstances(Dictionary<string, object?> props, HttpRequest request)
     {
         return (await Task.WhenAll(props.Select(async pair =>
         {
@@ -158,12 +186,13 @@ public class Response : IActionResult
                 Func<object?> f => (key, await f.ResolveAsync()),
                 Task t => (key, await t.ResolveResult()),
                 InvokableProp p => (key, await p.Invoke()),
+                ProvidesInertiaProperty pip => (key, pip.ToInertiaProperty(new PropertyContext(key, props, request))),
                 _ => (key, pair.Value)
             };
 
             if (value.Item2 is Dictionary<string, object?> dict)
             {
-                value = (key, await ResolvePropertyInstances(dict));
+                value = (key, await ResolvePropertyInstances(dict, request));
             }
 
             return value;
@@ -216,6 +245,76 @@ public class Response : IActionResult
     public Response WithViewData(IDictionary<string, object> viewData)
     {
         _viewData = viewData;
+        return this;
+    }
+
+    /// <summary>
+    /// Add additional properties to the page.
+    /// </summary>
+    /// <param name="key">The property key, a dictionary of properties, or a ProvidesInertiaProperties object</param>
+    /// <param name="value">The property value (only used when key is a string)</param>
+    /// <returns>The Response instance for method chaining</returns>
+    public Response With(string key, object? value)
+    {
+        _props[key] = value;
+        return this;
+    }
+
+    /// <summary>
+    /// Add additional properties to the page from a dictionary.
+    /// </summary>
+    /// <param name="properties">Dictionary of properties to add</param>
+    /// <returns>The Response instance for method chaining</returns>
+    public Response With(IDictionary<string, object?> properties)
+    {
+        foreach (var kvp in properties)
+        {
+            _props[kvp.Key] = kvp.Value;
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Add additional properties to the page from a ProvidesInertiaProperties object.
+    /// </summary>
+    /// <param name="provider">The property provider</param>
+    /// <returns>The Response instance for method chaining</returns>
+    public Response With(ProvidesInertiaProperties provider)
+    {
+        // Generate a unique key for the provider
+        var providerKey = $"__provider_{Guid.NewGuid():N}";
+        _props[providerKey] = provider;
+        return this;
+    }
+
+    /// <summary>
+    /// Add additional properties to the page from an anonymous object.
+    /// </summary>
+    /// <param name="properties">Anonymous object with properties to add</param>
+    /// <returns>The Response instance for method chaining</returns>
+    public Response With(object properties)
+    {
+        if (properties == null) return this;
+
+        if (properties is IDictionary<string, object?> dict)
+        {
+            return With(dict);
+        }
+
+        if (properties is ProvidesInertiaProperties provider)
+        {
+            return With(provider);
+        }
+
+        // Convert anonymous object to dictionary
+        var props = properties.GetType().GetProperties()
+            .ToDictionary(p => p.Name, p => p.GetValue(properties));
+
+        foreach (var kvp in props)
+        {
+            _props[kvp.Key] = kvp.Value;
+        }
+
         return this;
     }
 }
