@@ -2,6 +2,7 @@
 using InertiaCore.Props;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Mvc;
 
 [assembly: InternalsVisibleTo("InertiaCoreTests")]
 
@@ -30,6 +31,8 @@ public static class Inertia
     public static void Share(string key, object? value) => _factory.Share(key, value);
 
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
+
+    public static void ResolveUrlUsing(Func<ActionContext, string> urlResolver) => _factory.ResolveUrlUsing(urlResolver);
 
     public static AlwaysProp Always(string value) => _factory.Always(value);
 

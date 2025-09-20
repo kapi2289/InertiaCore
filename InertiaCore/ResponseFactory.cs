@@ -7,6 +7,7 @@ using InertiaCore.Ssr;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace InertiaCore;
@@ -24,6 +25,7 @@ internal interface IResponseFactory
     public void Share(IDictionary<string, object?> data);
     public void ClearHistory(bool clear = true);
     public void EncryptHistory(bool encrypt = true);
+    public void ResolveUrlUsing(Func<ActionContext, string> urlResolver);
     public AlwaysProp Always(object? value);
     public AlwaysProp Always(Func<object?> callback);
     public AlwaysProp Always(Func<Task<object?>> callback);
@@ -40,6 +42,7 @@ internal class ResponseFactory : IResponseFactory
     private object? _version;
     private bool _clearHistory;
     private bool? _encryptHistory;
+    private Func<ActionContext, string>? _urlResolver;
 
     public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
         (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
@@ -54,7 +57,7 @@ internal class ResponseFactory : IResponseFactory
                 .ToDictionary(o => o.Name, o => o.GetValue(props))
         };
 
-        return new Response(component, dictProps, _options.Value.RootView, GetVersion(), _encryptHistory ?? _options.Value.EncryptHistory, _clearHistory);
+        return new Response(component, dictProps, _options.Value.RootView, GetVersion(), _encryptHistory ?? _options.Value.EncryptHistory, _clearHistory, _urlResolver);
     }
 
     public async Task<IHtmlContent> Head(dynamic model)
@@ -138,6 +141,8 @@ internal class ResponseFactory : IResponseFactory
     public void ClearHistory(bool clear = true) => _clearHistory = clear;
 
     public void EncryptHistory(bool encrypt = true) => _encryptHistory = encrypt;
+
+    public void ResolveUrlUsing(Func<ActionContext, string> urlResolver) => _urlResolver = urlResolver;
 
     public LazyProp Lazy(Func<object?> callback) => new(callback);
     public LazyProp Lazy(Func<Task<object?>> callback) => new(callback);

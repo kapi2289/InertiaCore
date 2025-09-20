@@ -18,13 +18,14 @@ public class Response : IActionResult
     private readonly string? _version;
     private readonly bool _encryptHistory;
     private readonly bool _clearHistory;
+    private readonly Func<ActionContext, string>? _urlResolver;
 
     private ActionContext? _context;
     private Page? _page;
     private IDictionary<string, object>? _viewData;
 
-    internal Response(string component, Dictionary<string, object?> props, string rootView, string? version, bool encryptHistory, bool clearHistory)
-        => (_component, _props, _rootView, _version, _encryptHistory, _clearHistory) = (component, props, rootView, version, encryptHistory, clearHistory);
+    internal Response(string component, Dictionary<string, object?> props, string rootView, string? version, bool encryptHistory, bool clearHistory, Func<ActionContext, string>? urlResolver = null)
+        => (_component, _props, _rootView, _version, _encryptHistory, _clearHistory, _urlResolver) = (component, props, rootView, version, encryptHistory, clearHistory, urlResolver);
 
     public async Task ExecuteResultAsync(ActionContext context)
     {
@@ -41,7 +42,7 @@ public class Response : IActionResult
         {
             Component = _component,
             Version = _version,
-            Url = _context!.RequestedUri(),
+            Url = _urlResolver?.Invoke(_context!) ?? _context!.RequestedUri(),
             Props = props,
             EncryptHistory = _encryptHistory,
             ClearHistory = _clearHistory,
