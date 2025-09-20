@@ -249,7 +249,7 @@ public partial class Tests
             Assert.That(result, Is.InstanceOf<JsonResult>());
 
             var json = (result as JsonResult)?.Value;
-            Assert.That((json as Page)?.Version, Is.EqualTo("bba1afd1066309f4a69430e0c446ba8d"));
+            Assert.That((json as Page)?.Version, Is.EqualTo("24a5fa185351b781e5eb6f813c433180"));
         });
     }
 }

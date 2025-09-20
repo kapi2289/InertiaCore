@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
+using System.IO.Hashing;
 
 namespace InertiaCore.Extensions;
 
@@ -51,11 +52,10 @@ internal static class InertiaExtensions
         return result?.GetValue(task);
     }
 
-    internal static string MD5(this string s)
+    internal static string XXH128(this string s)
     {
-        using var md5 = System.Security.Cryptography.MD5.Create();
         var inputBytes = Encoding.UTF8.GetBytes(s);
-        var hashBytes = md5.ComputeHash(inputBytes);
+        var hashBytes = XxHash128.Hash(inputBytes);
 
         var sb = new StringBuilder();
         foreach (var t in hashBytes)

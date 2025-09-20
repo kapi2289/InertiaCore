@@ -247,5 +247,5 @@ public static class Vite
     /// <summary>
     /// Generate the Manifest hash.
     /// </summary>
-    public static string? GetManifestHash() => _instance.GetManifest()?.MD5();
+    public static string? GetManifestHash() => _instance.GetManifest()?.XXH128();
 }

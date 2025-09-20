@@ -22,6 +22,7 @@
 
     <ItemGroup>
         <PackageReference Include="System.IO.Abstractions" Version="19.2.16" />
+        <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
         <PackageReference Include="TypeMerger" Version="2.1.1" />
     </ItemGroup>
 
