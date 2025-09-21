@@ -8,6 +8,7 @@ using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Hosting;
 
 namespace InertiaCore;
 
@@ -36,16 +37,22 @@ internal class ResponseFactory : IResponseFactory
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly IGateway _gateway;
     private readonly IOptions<InertiaOptions> _options;
+    private readonly IWebHostEnvironment _environment;
 
     private object? _version;
     private bool _clearHistory;
     private bool? _encryptHistory;
 
-    public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options) =>
-        (_contextAccessor, _gateway, _options) = (contextAccessor, gateway, options);
+    public ResponseFactory(IHttpContextAccessor contextAccessor, IGateway gateway, IOptions<InertiaOptions> options, IWebHostEnvironment environment) =>
+        (_contextAccessor, _gateway, _options, _environment) = (contextAccessor, gateway, options, environment);
 
     public Response Render(string component, object? props = null)
     {
+        if (_options.Value.EnsurePagesExist)
+        {
+            FindComponentOrFail(component);
+        }
+
         props ??= new { };
         var dictProps = props switch
         {
@@ -144,4 +151,42 @@ internal class ResponseFactory : IResponseFactory
     public AlwaysProp Always(object? value) => new(value);
     public AlwaysProp Always(Func<object?> callback) => new(callback);
     public AlwaysProp Always(Func<Task<object?>> callback) => new(callback);
+
+    private void FindComponentOrFail(string component)
+    {
+        var exists = FindComponent(component);
+        if (!exists)
+        {
+            throw new ComponentNotFoundException(component);
+        }
+    }
+
+    private bool FindComponent(string component)
+    {
+        foreach (var path in _options.Value.PagePaths)
+        {
+            var resolvedPath = ResolvePath(path);
+            if (string.IsNullOrEmpty(resolvedPath)) continue;
+
+            foreach (var extension in _options.Value.PageExtensions)
+            {
+                var normalizedComponent = component.Replace('/', Path.DirectorySeparatorChar);
+                var fullPath = Path.Combine(resolvedPath, normalizedComponent + extension);
+                if (File.Exists(fullPath))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private string? ResolvePath(string path)
+    {
+        if (path.StartsWith("~/"))
+        {
+            return Path.Combine(_environment.ContentRootPath, path[2..]);
+        }
+        return Path.IsPathRooted(path) ? path : Path.Combine(_environment.ContentRootPath, path);
+    }
 }
