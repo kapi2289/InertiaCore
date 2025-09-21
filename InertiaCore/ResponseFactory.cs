@@ -59,7 +59,7 @@ internal class ResponseFactory : IResponseFactory
 
     public async Task<IHtmlContent> Head(dynamic model)
     {
-        if (!_options.Value.SsrEnabled) return new HtmlString("");
+        if (!_options.Value.SsrEnabled || !_gateway.ShouldDispatch()) return new HtmlString("");
 
         var context = _contextAccessor.HttpContext!;
 
@@ -74,7 +74,7 @@ internal class ResponseFactory : IResponseFactory
 
     public async Task<IHtmlContent> Html(dynamic model)
     {
-        if (_options.Value.SsrEnabled)
+        if (_options.Value.SsrEnabled && _gateway.ShouldDispatch())
         {
             var context = _contextAccessor.HttpContext!;
 
