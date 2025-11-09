@@ -6,18 +6,14 @@ namespace InertiaCoreTests;
 public partial class Tests
 {
     [Test]
-    [Description("Test if the lazy data is fetched properly.")]
-    public async Task TestLazyData()
+    [Description("Test if the always data is fetched properly.")]
+    public async Task TestAlwaysData()
     {
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() =>
-            {
-                Assert.Fail();
-                return "Lazy";
-            })
+            TestAlways = _factory.Always(() => "Always")
         });
 
         var context = PrepareContext();
@@ -31,23 +27,24 @@ public partial class Tests
         {
             { "test", "Test" },
             { "testFunc", "Func" },
+            { "testAlways", "Always" },
             { "errors", new Dictionary<string, string>(0) }
         }));
     }
 
     [Test]
-    [Description("Test if the lazy data is fetched properly with specified partial props.")]
-    public async Task TestLazyPartialData()
+    [Description("Test if the always data is fetched properly with specified partial props.")]
+    public async Task TestAlwaysPartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() => "Lazy")
+            TestAlways = _factory.Always(() => "Always")
         });
 
         var headers = new HeaderDictionary
         {
-            { "X-Inertia-Partial-Data", "testFunc,testLazy" },
+            { "X-Inertia-Partial-Data", "testFunc,testAlways" },
             { "X-Inertia-Partial-Component", "Test/Page" }
         };
 
@@ -61,25 +58,20 @@ public partial class Tests
         Assert.That(page?.Props, Is.EqualTo(new Dictionary<string, object?>
         {
             { "testFunc", "Func" },
-            { "testLazy", "Lazy" },
+            { "testAlways", "Always" },
             { "errors", new Dictionary<string, string>(0) }
         }));
     }
 
-
     [Test]
-    [Description("Test if the lazy async data is fetched properly.")]
-    public async Task TestLazyAsyncData()
+    [Description("Test if the always async data is fetched properly.")]
+    public async Task TestAlwaysAsyncData()
     {
         var response = _factory.Render("Test/Page", new
         {
             Test = "Test",
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() =>
-            {
-                Assert.Fail();
-                return Task.FromResult<object?>("Lazy Async");
-            })
+            TestAlways = _factory.Always(() => Task.FromResult<object?>("Always Async"))
         });
 
         var context = PrepareContext();
@@ -93,23 +85,24 @@ public partial class Tests
         {
             { "test", "Test" },
             { "testFunc", "Func" },
+            { "testAlways", "Always Async" },
             { "errors", new Dictionary<string, string>(0) }
         }));
     }
 
     [Test]
-    [Description("Test if the lazy async data is fetched properly with specified partial props.")]
-    public async Task TestLazyAsyncPartialData()
+    [Description("Test if the always async data is fetched properly with specified partial props.")]
+    public async Task TestAlwaysAsyncPartialData()
     {
         var response = _factory.Render("Test/Page", new
         {
             TestFunc = new Func<string>(() => "Func"),
-            TestLazy = _factory.Lazy(() => Task.FromResult<object?>("Lazy Async"))
+            TestAlways = _factory.Always(() => Task.FromResult<object?>("Always Async"))
         });
 
         var headers = new HeaderDictionary
         {
-            { "X-Inertia-Partial-Data", "testFunc,testLazy" },
+            { "X-Inertia-Partial-Data", "testFunc,testAlways" },
             { "X-Inertia-Partial-Component", "Test/Page" }
         };
 
@@ -123,7 +116,39 @@ public partial class Tests
         Assert.That(page?.Props, Is.EqualTo(new Dictionary<string, object?>
         {
             { "testFunc", "Func" },
-            { "testLazy", "Lazy Async" },
+            { "testAlways", "Always Async" },
+            { "errors", new Dictionary<string, string>(0) }
+        }));
+    }
+
+    [Test]
+    [Description("Test if the always async data is fetched properly without specified partial props.")]
+    public async Task TestAlwaysAsyncPartialDataOmitted()
+    {
+        var response = _factory.Render("Test/Page", new
+        {
+            TestFunc = new Func<string>(() => "Func"),
+            TestAlways = _factory.Always(() => Task.FromResult<object?>("Always Async"))
+        });
+
+        var headers = new HeaderDictionary
+        {
+            { "X-Inertia-Partial-Data", "testFunc" },
+            { "X-Inertia-Partial-Except", "testAlways" },
+            { "X-Inertia-Partial-Component", "Test/Page" }
+        };
+
+        var context = PrepareContext(headers);
+
+        response.SetContext(context);
+        await response.ProcessResponse();
+
+        var page = response.GetJson().Value as Page;
+
+        Assert.That(page?.Props, Is.EqualTo(new Dictionary<string, object?>
+        {
+            { "testFunc", "Func" },
+            { "testAlways", "Always Async" },
             { "errors", new Dictionary<string, string>(0) }
         }));
     }

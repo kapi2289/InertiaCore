@@ -1,24 +1,16 @@
 using System.Text.Json;
+using InertiaCore.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace InertiaCore.Extensions;
 
 internal static class InertiaExtensions
 {
-    internal static IEnumerable<string> Only(this object obj, IEnumerable<string> only) =>
-        obj.GetType().GetProperties().Select(c => c.Name)
-            .Intersect(only, StringComparer.OrdinalIgnoreCase).ToList();
-
-    internal static List<string> GetPartialData(this ActionContext context) =>
-        context.HttpContext.Request.Headers["X-Inertia-Partial-Data"]
-            .FirstOrDefault()?.Split(",")
-            .Where(s => !string.IsNullOrEmpty(s))
-            .ToList() ?? new List<string>();
-
     internal static bool IsInertiaPartialComponent(this ActionContext context, string component) =>
-        context.HttpContext.Request.Headers["X-Inertia-Partial-Component"] == component;
+        context.HttpContext.Request.Headers[InertiaHeader.PartialComponent] == component;
 
     internal static string RequestedUri(this HttpContext context) =>
         Uri.UnescapeDataString(context.Request.GetEncodedPathAndQuery());
@@ -26,7 +18,7 @@ internal static class InertiaExtensions
     internal static string RequestedUri(this ActionContext context) => context.HttpContext.RequestedUri();
 
     internal static bool IsInertiaRequest(this HttpContext context) =>
-        bool.TryParse(context.Request.Headers["X-Inertia"], out _);
+        bool.TryParse(context.Request.Headers[InertiaHeader.Inertia], out _);
 
     internal static bool IsInertiaRequest(this ActionContext context) => context.HttpContext.IsInertiaRequest();
 
@@ -34,13 +26,41 @@ internal static class InertiaExtensions
 
     internal static bool Override<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
-        if (dictionary.ContainsKey(key))
-        {
-            dictionary[key] = value;
-            return true;
-        }
+        if (dictionary.TryAdd(key, value)) return false;
+        dictionary[key] = value;
 
-        dictionary.Add(key, value);
-        return false;
+        return true;
+    }
+
+    internal static Task<object?> ResolveAsync(this Func<object?> func)
+    {
+        var rt = func.Method.ReturnType;
+
+        if (!rt.IsGenericType || rt.GetGenericTypeDefinition() != typeof(Task<>))
+            return Task.Run(func.Invoke);
+
+        var task = func.DynamicInvoke() as Task;
+        return task!.ResolveResult();
+    }
+
+    internal static async Task<object?> ResolveResult(this Task task)
+    {
+        await task.ConfigureAwait(false);
+        var result = task.GetType().GetProperty("Result");
+
+        return result?.GetValue(task);
+    }
+
+    internal static string MD5(this string s)
+    {
+        using var md5 = System.Security.Cryptography.MD5.Create();
+        var inputBytes = Encoding.UTF8.GetBytes(s);
+        var hashBytes = md5.ComputeHash(inputBytes);
+
+        var sb = new StringBuilder();
+        foreach (var t in hashBytes)
+            sb.Append(t.ToString("x2"));
+
+        return sb.ToString();
     }
 }

@@ -2,7 +2,7 @@ using InertiaCore.Extensions;
 
 namespace InertiaCore.Utils;
 
-internal class InertiaSharedData
+internal class InertiaSharedProps
 {
     private IDictionary<string, object?>? Data { get; set; }
 

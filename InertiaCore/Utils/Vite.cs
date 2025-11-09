@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.IO.Abstractions;
 using InertiaCore.Models;
 using Microsoft.Extensions.Options;
+using InertiaCore.Extensions;
 
 namespace InertiaCore.Utils;
 
@@ -13,6 +14,7 @@ public interface IViteBuilder
 {
     HtmlString ReactRefresh();
     HtmlString Input(string path);
+    string? GetManifest();
 }
 
 internal class ViteBuilder : IViteBuilder
@@ -28,9 +30,22 @@ internal class ViteBuilder : IViteBuilder
     }
 
     /// <summary>
-    /// Get the public directory and build path.
+    /// Get the public directory
     /// </summary>
     private string GetPublicPathForFile(string path)
+    {
+        var pieces = new List<string> {
+            _options.Value.PublicDirectory,
+            path
+        };
+
+        return string.Join("/", pieces);
+    }
+
+    /// <summary>
+    /// Get the public directory and build path.
+    /// </summary>
+    private string GetBuildPathForFile(string path)
     {
         var pieces = new List<string> { _options.Value.PublicDirectory };
         if (!string.IsNullOrEmpty(_options.Value.BuildDirectory))
@@ -52,12 +67,12 @@ internal class ViteBuilder : IViteBuilder
             return new HtmlString(MakeModuleTag("@vite/client").Value + MakeModuleTag(path).Value);
         }
 
-        if (!_fileSystem.File.Exists(GetPublicPathForFile(_options.Value.ManifestFilename)))
+        if (!_fileSystem.File.Exists(GetBuildPathForFile(_options.Value.ManifestFilename)))
         {
             throw new Exception("Vite Manifest is missing. Run `npm run build` and try again.");
         }
 
-        var manifest = _fileSystem.File.ReadAllText(GetPublicPathForFile(_options.Value.ManifestFilename));
+        var manifest = _fileSystem.File.ReadAllText(GetBuildPathForFile(_options.Value.ManifestFilename));
         var manifestJson = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(manifest);
 
         if (manifestJson == null)
@@ -65,12 +80,11 @@ internal class ViteBuilder : IViteBuilder
             throw new Exception("Vite Manifest is invalid. Run `npm run build` and try again.");
         }
 
-        if (!manifestJson.ContainsKey(path))
+        if (!manifestJson.TryGetValue(path, out var obj))
         {
             throw new Exception("Asset not found in manifest: " + path);
         }
 
-        var obj = manifestJson[path];
         var filePath = obj.GetProperty("file");
 
         if (IsCssPath(filePath.ToString()))
@@ -205,6 +219,13 @@ internal class ViteBuilder : IViteBuilder
         content.WriteTo(writer, HtmlEncoder.Default);
         return writer.ToString();
     }
+
+    public string? GetManifest()
+    {
+        return _fileSystem.File.Exists(GetBuildPathForFile(_options.Value.ManifestFilename))
+            ? _fileSystem.File.ReadAllText(GetBuildPathForFile(_options.Value.ManifestFilename))
+            : null;
+    }
 }
 
 public static class Vite
@@ -222,4 +243,9 @@ public static class Vite
     /// Generate React refresh runtime script.
     /// </summary>
     public static HtmlString ReactRefresh() => _instance.ReactRefresh();
+
+    /// <summary>
+    /// Generate the Manifest hash.
+    /// </summary>
+    public static string? GetManifestHash() => _instance.GetManifest()?.MD5();
 }
