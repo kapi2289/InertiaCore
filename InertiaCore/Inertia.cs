@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Net;
+using System.Runtime.CompilerServices;
 using InertiaCore.Props;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Html;
@@ -29,11 +30,14 @@ public static class Inertia
 
     public static LocationResult Location(string url) => _factory.Location(url);
 
-    public static BackResult Back(string? fallbackUrl = null) => _factory.Back(fallbackUrl);
+    public static BackResult Back(string? fallbackUrl = null, HttpStatusCode statusCode = HttpStatusCode.SeeOther) =>
+        _factory.Back(fallbackUrl, statusCode);
 
     public static void Share(string key, object? value) => _factory.Share(key, value);
 
     public static void Share(IDictionary<string, object?> data) => _factory.Share(data);
+
+    public static void FlushShared() => _factory.FlushShared();
 
     public static AlwaysProp Always(string value) => _factory.Always(value);
 

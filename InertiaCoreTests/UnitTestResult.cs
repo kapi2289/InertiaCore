@@ -73,6 +73,8 @@ public partial class Tests
                 { "test", "Test" },
                 { "errors", new Dictionary<string, string>(0) }
             }));
+            Assert.That((model as Page)?.EncryptHistory, Is.EqualTo(false));
+            Assert.That((model as Page)?.ClearHistory, Is.EqualTo(false));
         });
     }
 }

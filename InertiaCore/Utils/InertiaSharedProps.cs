@@ -26,4 +26,9 @@ internal class InertiaSharedProps
         Data ??= new Dictionary<string, object?>();
         Data[key.ToCamelCase()] = value;
     }
+
+    public void Clear()
+    {
+        Data = null;
+    }
 }

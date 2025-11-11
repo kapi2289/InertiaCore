@@ -1,7 +1,6 @@
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using InertiaCore.Utils;
 
 namespace InertiaCore.Ssr;
 
@@ -13,17 +12,14 @@ internal interface IGateway
 internal class Gateway : IGateway
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IInertiaSerializer _serializer;
 
-    public Gateway(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory;
+    public Gateway(IHttpClientFactory httpClientFactory, IInertiaSerializer serializer)
+        => (_httpClientFactory, _serializer) = (httpClientFactory, serializer);
 
     public async Task<SsrResponse?> Dispatch(dynamic model, string url)
     {
-        var json = JsonSerializer.Serialize(model,
-            new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
-            });
+        var json = _serializer.Serialize(model);
         var content = new StringContent(json.ToString(), Encoding.UTF8, "application/json");
 
         var client = _httpClientFactory.CreateClient();

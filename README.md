@@ -217,6 +217,73 @@ builder.Services.AddInertia(options =>
 });
 ```
 
+### Custom JSON serializer
+
+You can use a custom JSON serializer in your app by creating a custom class implementing the `IInertiaSerializer`
+interface:
+
+```csharp
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
+
+public class CustomSerializer : IInertiaSerializer
+{
+    // Used in HTML responses
+    public string Serialize(object? obj)
+    {
+        // Default serialization
+        return JsonSerializer.Serialize(obj, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        });
+    }
+
+    // Used in JSON responses
+    public JsonResult SerializeResult(object? obj)
+    {
+        // Default serialization
+        return new JsonResult(obj, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        });
+    }
+}
+```
+
+or extending the `DefaultInertiaSerializer` class, which also implements the `IInertiaSerializer` interface:
+
+```csharp
+public class CustomSerializer : DefaultInertiaSerializer
+{
+    protected new static JsonSerializerOptions GetOptions()
+    {
+        // Default options
+        return new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        };
+    }
+}
+```
+
+You can then register it in the configuration:
+
+```csharp
+builder.Services.AddInertia();
+
+[...]
+
+builder.Services.UseInertiaSerializer<CustomSerializer>();
+
+[...]
+
+app.UseInertia();
+```
+
 ### Vite Helper
 
 A Vite helper class is available to automatically load your generated styles or scripts by simply using the `@Vite.Input("src/main.tsx")` helper. You can also enable HMR when using React by using the `@Vite.ReactRefresh()` helper. This pairs well with the `laravel-vite-plugin` npm package.

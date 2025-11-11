@@ -23,6 +23,7 @@ public class UnitTestMiddleware
     private Mock<IServiceProvider> _serviceProviderMock = null!;
     private Mock<ITempDataDictionaryFactory> _tempDataFactoryMock = null!;
     private Mock<ITempDataDictionary> _tempDataMock = null!;
+    private Mock<IInertiaSerializer> _serializerMock = null!;
     private IResponseFactory _factory = null!;
 
     [SetUp]
@@ -32,6 +33,7 @@ public class UnitTestMiddleware
         _serviceProviderMock = new Mock<IServiceProvider>();
         _tempDataFactoryMock = new Mock<ITempDataDictionaryFactory>();
         _tempDataMock = new Mock<ITempDataDictionary>();
+        _serializerMock = new Mock<IInertiaSerializer>();
 
         _tempDataFactoryMock.Setup(f => f.GetTempData(It.IsAny<HttpContext>()))
             .Returns(_tempDataMock.Object);
@@ -42,11 +44,11 @@ public class UnitTestMiddleware
         // Set up Inertia factory
         var contextAccessor = new Mock<IHttpContextAccessor>();
         var httpClientFactory = new Mock<IHttpClientFactory>();
-        var gateway = new Gateway(httpClientFactory.Object);
+        var gateway = new Gateway(httpClientFactory.Object, _serializerMock.Object);
         var options = new Mock<IOptions<InertiaOptions>>();
         options.SetupGet(x => x.Value).Returns(new InertiaOptions());
 
-        _factory = new ResponseFactory(contextAccessor.Object, gateway, options.Object);
+        _factory = new ResponseFactory(contextAccessor.Object, gateway, _serializerMock.Object, options.Object);
         Inertia.UseFactory(_factory);
 
         _middleware = new Middleware(_nextMock.Object);

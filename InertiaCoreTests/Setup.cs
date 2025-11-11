@@ -22,11 +22,12 @@ public partial class Tests
         var contextAccessor = new Mock<IHttpContextAccessor>();
         var httpClientFactory = new Mock<IHttpClientFactory>();
 
-        var gateway = new Gateway(httpClientFactory.Object);
+        var serializer = new DefaultInertiaSerializer();
+        var gateway = new Gateway(httpClientFactory.Object, serializer);
         var options = new Mock<IOptions<InertiaOptions>>();
         options.SetupGet(x => x.Value).Returns(new InertiaOptions());
 
-        _factory = new ResponseFactory(contextAccessor.Object, gateway, options.Object);
+        _factory = new ResponseFactory(contextAccessor.Object, gateway, serializer, options.Object);
     }
 
     /// <summary>
