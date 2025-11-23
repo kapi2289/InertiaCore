@@ -16,7 +16,6 @@ public class BackResult : IActionResult
 
     public Task ExecuteResultAsync(ActionContext context)
     {
-
         // Store validation errors in TempData if ModelState has errors
         if (!context.ModelState.IsValid)
         {

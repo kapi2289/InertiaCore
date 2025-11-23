@@ -1,9 +1,8 @@
-using System.Net;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,7 +36,7 @@ public static class Configure
     private static void CheckTempDataAvailability(IApplicationBuilder app)
     {
         // Skip warning in test environments
-        var environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+        var environment = app.ApplicationServices.GetService<IWebHostEnvironment>();
         if (environment?.EnvironmentName == "Test" ||
             (environment?.EnvironmentName != "Development" && IsTestEnvironment()))
         {

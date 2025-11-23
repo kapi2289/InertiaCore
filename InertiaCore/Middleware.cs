@@ -1,11 +1,9 @@
-using InertiaCore;
+using System.Net;
+using InertiaCore.Extensions;
+using InertiaCore.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using System.Net;
-using InertiaCore.Utils;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using InertiaCore.Extensions;
 
 namespace InertiaCore;
 

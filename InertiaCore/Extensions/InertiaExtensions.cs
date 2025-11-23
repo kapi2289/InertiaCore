@@ -87,7 +87,8 @@ internal static class InertiaExtensions
     /// <summary>
     /// Sets validation errors in TempData for the specified error bag.
     /// </summary>
-    public static void SetValidationErrors(this ITempDataDictionary tempData, Dictionary<string, string> errors, string bagName = "default")
+    public static void SetValidationErrors(this ITempDataDictionary tempData, Dictionary<string, string> errors,
+        string bagName = "default")
     {
         // Deserialize existing error bags from JSON
         var errorBags = new Dictionary<string, Dictionary<string, string>>();
@@ -96,7 +97,7 @@ internal static class InertiaExtensions
             try
             {
                 errorBags = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(existingJson)
-                           ?? new Dictionary<string, Dictionary<string, string>>();
+                            ?? new Dictionary<string, Dictionary<string, string>>();
             }
             catch (JsonException)
             {
@@ -114,7 +115,8 @@ internal static class InertiaExtensions
     /// <summary>
     /// Sets validation errors in TempData from ModelState for the specified error bag.
     /// </summary>
-    public static void SetValidationErrors(this ITempDataDictionary tempData, ModelStateDictionary modelState, string bagName = "default")
+    public static void SetValidationErrors(this ITempDataDictionary tempData, ModelStateDictionary modelState,
+        string bagName = "default")
     {
         var errors = modelState.ToDictionary(
             kvp => kvp.Key,
@@ -126,7 +128,8 @@ internal static class InertiaExtensions
     /// <summary>
     /// Retrieve and clear validation errors from TempData, supporting error bags.
     /// </summary>
-    public static Dictionary<string, string> GetAndClearValidationErrors(this ITempDataDictionary tempData, HttpRequest request)
+    public static Dictionary<string, string> GetAndClearValidationErrors(this ITempDataDictionary tempData,
+        HttpRequest request)
     {
         var errors = new Dictionary<string, string>();
 
@@ -139,7 +142,8 @@ internal static class InertiaExtensions
         {
             try
             {
-                storedErrors = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonString) ?? new Dictionary<string, Dictionary<string, string>>();
+                storedErrors = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonString) ??
+                               new Dictionary<string, Dictionary<string, string>>();
             }
             catch (JsonException)
             {
@@ -167,6 +171,7 @@ internal static class InertiaExtensions
                 errors[kvp.Key] = kvp.Value;
             }
         }
+
         // If there are multiple bags or a specific bag is requested, return the named bag
         else if (storedErrors.ContainsKey(errorBag))
         {
@@ -175,6 +180,7 @@ internal static class InertiaExtensions
                 errors[kvp.Key] = kvp.Value;
             }
         }
+
         // If no specific bag and multiple bags exist, return all bags
         else if (errorBag == "default" && storedErrors.Count > 1)
         {

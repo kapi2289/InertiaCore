@@ -48,10 +48,8 @@ public class IntegrationTestMiddleware
                     app.UseRouting();
                     app.UseEndpoints(endpoints =>
                     {
-                        endpoints.MapGet("/test", async context =>
-                        {
-                            await context.Response.WriteAsync("Hello from endpoint");
-                        });
+                        endpoints.MapGet("/test",
+                            async context => { await context.Response.WriteAsync("Hello from endpoint"); });
 
                         endpoints.MapPost("/empty", context =>
                         {
@@ -208,7 +206,8 @@ public class IntegrationTestMiddleware
         IDisposable ILogger.BeginScope<TState>(TState state) => null!;
         public bool IsEnabled(LogLevel logLevel) => true;
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter)
         {
             var message = formatter(state, exception);
             LoggedMessages.Add(message);
@@ -249,5 +248,4 @@ public class IntegrationTestMiddleware
 
         host.Dispose();
     }
-
 }

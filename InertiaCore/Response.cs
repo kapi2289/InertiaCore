@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Props;
@@ -214,20 +213,17 @@ public class Response : IActionResult
 
         // Then check TempData for stored validation errors
         var requestServices = _context!.HttpContext.RequestServices;
-        if (requestServices != null)
-        {
-            var tempDataFactory = requestServices.GetService<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionaryFactory>();
-            if (tempDataFactory != null)
-            {
-                var tempData = tempDataFactory.GetTempData(_context!.HttpContext);
-                var storedErrors = tempData.GetAndClearValidationErrors(_context!.HttpContext.Request);
 
-                // Merge stored errors with current errors, converting keys to camelCase
-                foreach (var kvp in storedErrors)
-                {
-                    errors[kvp.Key.ToCamelCase()] = kvp.Value;
-                }
-            }
+        var tempDataFactory = requestServices.GetService<ITempDataDictionaryFactory>();
+        if (tempDataFactory == null) return errors;
+
+        var tempData = tempDataFactory.GetTempData(_context!.HttpContext);
+        var storedErrors = tempData.GetAndClearValidationErrors(_context!.HttpContext.Request);
+
+        // Merge stored errors with current errors, converting keys to camelCase
+        foreach (var kvp in storedErrors)
+        {
+            errors[kvp.Key.ToCamelCase()] = kvp.Value;
         }
 
         return errors;
@@ -268,7 +264,8 @@ public class Response : IActionResult
         {
             try
             {
-                errorBags = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonString) ?? new Dictionary<string, Dictionary<string, string>>();
+                errorBags = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonString) ??
+                            new Dictionary<string, Dictionary<string, string>>();
             }
             catch (JsonException)
             {
@@ -326,7 +323,7 @@ public class Response : IActionResult
     {
         if (!_context!.ModelState.IsValid)
             return _context!.ModelState.ToDictionary(o => o.Key.ToCamelCase(),
-                 o => o.Value?.Errors.FirstOrDefault()?.ErrorMessage ?? "");
+                o => o.Value?.Errors.FirstOrDefault()?.ErrorMessage ?? "");
 
         return new Dictionary<string, string>(0);
     }

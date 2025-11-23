@@ -1,13 +1,14 @@
+using System.Text.Json;
 using InertiaCore.Extensions;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using NUnit.Framework;
-using System.Text.Json;
 
 namespace InertiaCoreTests;
 
@@ -46,7 +47,8 @@ public class UnitTestBackResult
 
         // Mock TempData behavior
         _tempDataMock.SetupGet(t => t["__ValidationErrors"])
-            .Returns(() => _tempDataDict.ContainsKey("__ValidationErrors") ? _tempDataDict["__ValidationErrors"] : null);
+            .Returns(() =>
+                _tempDataDict.ContainsKey("__ValidationErrors") ? _tempDataDict["__ValidationErrors"] : null);
 
         _tempDataMock.SetupSet(t => t["__ValidationErrors"] = It.IsAny<object>())
             .Callback<string, object>((key, value) => _tempDataDict[key] = value);
@@ -55,8 +57,8 @@ public class UnitTestBackResult
         _actionContext = new ActionContext
         {
             HttpContext = _httpContextMock.Object,
-            RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-            ActionDescriptor = new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
+            RouteData = new RouteData(),
+            ActionDescriptor = new ActionDescriptor()
         };
     }
 
@@ -72,7 +74,8 @@ public class UnitTestBackResult
         // Simulate the error storage logic from BackResult.ExecuteResultAsync
         if (!_actionContext.ModelState.IsValid)
         {
-            var tempDataFactory = _actionContext.HttpContext.RequestServices.GetRequiredService<ITempDataDictionaryFactory>();
+            var tempDataFactory =
+                _actionContext.HttpContext.RequestServices.GetRequiredService<ITempDataDictionaryFactory>();
             var tempData = tempDataFactory.GetTempData(_actionContext.HttpContext);
             tempData.SetValidationErrors(_actionContext.ModelState);
         }
@@ -90,8 +93,10 @@ public class UnitTestBackResult
         _actionContext.ModelState.AddModelError("password", "Password is required");
 
         var tempDataDict = new Dictionary<string, object>();
-        _tempDataMock.SetupGet(t => t["__ValidationErrors"]).Returns(() => tempDataDict.ContainsKey("__ValidationErrors") ? tempDataDict["__ValidationErrors"] : null);
-        _tempDataMock.SetupSet(t => t["__ValidationErrors"] = It.IsAny<object>()).Callback<string, object>((key, value) => tempDataDict[key] = value);
+        _tempDataMock.SetupGet(t => t["__ValidationErrors"]).Returns(() =>
+            tempDataDict.ContainsKey("__ValidationErrors") ? tempDataDict["__ValidationErrors"] : null);
+        _tempDataMock.SetupSet(t => t["__ValidationErrors"] = It.IsAny<object>())
+            .Callback<string, object>((key, value) => tempDataDict[key] = value);
 
         var backResult = new BackResult("/fallback");
         var headers = new HeaderDictionary { ["Referer"] = "https://example.com/previous" };
@@ -100,7 +105,8 @@ public class UnitTestBackResult
         // Act - Simulate the error storage logic from BackResult.ExecuteResultAsync
         if (!_actionContext.ModelState.IsValid)
         {
-            var tempDataFactory = _actionContext.HttpContext.RequestServices.GetRequiredService<ITempDataDictionaryFactory>();
+            var tempDataFactory =
+                _actionContext.HttpContext.RequestServices.GetRequiredService<ITempDataDictionaryFactory>();
             var tempData = tempDataFactory.GetTempData(_actionContext.HttpContext);
             tempData.SetValidationErrors(_actionContext.ModelState);
         }
@@ -128,18 +134,15 @@ public class UnitTestBackResult
         _httpRequestMock.SetupGet(r => r.Headers).Returns(headers);
 
         // Act & Assert - Test the error storage logic without full redirect execution
-        Assert.DoesNotThrow(() => {
+        Assert.DoesNotThrow(() =>
+        {
             // Simulate the error storage logic from BackResult.ExecuteResultAsync
-            if (!_actionContext.ModelState.IsValid)
-            {
-                var requestServices = _actionContext.HttpContext.RequestServices;
-                if (requestServices != null)
-                {
-                    var tempDataFactory = requestServices.GetRequiredService<ITempDataDictionaryFactory>();
-                    var tempData = tempDataFactory.GetTempData(_actionContext.HttpContext);
-                    tempData.SetValidationErrors(_actionContext.ModelState);
-                }
-            }
+            if (_actionContext.ModelState.IsValid) return;
+            var requestServices = _actionContext.HttpContext.RequestServices;
+
+            var tempDataFactory = requestServices.GetRequiredService<ITempDataDictionaryFactory>();
+            var tempData = tempDataFactory.GetTempData(_actionContext.HttpContext);
+            tempData.SetValidationErrors(_actionContext.ModelState);
         });
     }
 

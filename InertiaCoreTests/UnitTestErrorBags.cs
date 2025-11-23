@@ -1,16 +1,15 @@
+using System.Reflection;
+using System.Text.Json;
 using InertiaCore;
 using InertiaCore.Extensions;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Routing;
 using Moq;
-using NUnit.Framework;
-using System.Text.Json;
-using System.Net;
 
 namespace InertiaCoreTests;
 
@@ -52,19 +51,24 @@ public class UnitTestErrorBags
         _actionContext = new ActionContext
         {
             HttpContext = _httpContextMock.Object,
-            RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-            ActionDescriptor = new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
+            RouteData = new RouteData(),
+            ActionDescriptor = new ActionDescriptor()
         };
 
         // Set up reflection to access internal constructor
         var responseType = typeof(Response);
         var constructor = responseType.GetConstructor(
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+            BindingFlags.NonPublic | BindingFlags.Instance,
             null,
-            new[] { typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string), typeof(IInertiaSerializer) },
+            new[]
+            {
+                typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string),
+                typeof(IInertiaSerializer)
+            },
             null);
 
-        _response = (Response)constructor!.Invoke(new object[] { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
+        _response = (Response)constructor!.Invoke(new object[]
+            { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
         _response.SetContext(_actionContext);
     }
 
@@ -79,8 +83,10 @@ public class UnitTestErrorBags
         };
 
         var tempDataDict = new Dictionary<string, object>();
-        _tempDataMock.SetupGet(t => t["__ValidationErrors"]).Returns(() => tempDataDict.ContainsKey("__ValidationErrors") ? tempDataDict["__ValidationErrors"] : null);
-        _tempDataMock.SetupSet(t => t["__ValidationErrors"] = It.IsAny<object>()).Callback<string, object>((key, value) => tempDataDict[key] = value);
+        _tempDataMock.SetupGet(t => t["__ValidationErrors"])
+            .Returns(() => tempDataDict.GetValueOrDefault("__ValidationErrors"));
+        _tempDataMock.SetupSet(t => t["__ValidationErrors"] = It.IsAny<object>())
+            .Callback<string, object>((key, value) => tempDataDict[key] = value);
 
         // Act
         _tempDataMock.Object.SetValidationErrors(errors, "login");
@@ -104,8 +110,10 @@ public class UnitTestErrorBags
         modelState.AddModelError("Password", "Password is required");
 
         var tempDataDict = new Dictionary<string, object>();
-        _tempDataMock.SetupGet(t => t["__ValidationErrors"]).Returns(() => tempDataDict.ContainsKey("__ValidationErrors") ? tempDataDict["__ValidationErrors"] : null);
-        _tempDataMock.SetupSet(t => t["__ValidationErrors"] = It.IsAny<object>()).Callback<string, object>((key, value) => tempDataDict[key] = value);
+        _tempDataMock.SetupGet(t => t["__ValidationErrors"])
+            .Returns(() => tempDataDict.GetValueOrDefault("__ValidationErrors"));
+        _tempDataMock.SetupSet(t => t["__ValidationErrors"] = It.IsAny<object>())
+            .Callback<string, object>((key, value) => tempDataDict[key] = value);
 
         // Act
         _tempDataMock.Object.SetValidationErrors(modelState, "registration");
@@ -131,19 +139,25 @@ public class UnitTestErrorBags
         var testActionContext = new ActionContext
         {
             HttpContext = _httpContextMock.Object,
-            RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-            ActionDescriptor = new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
+            RouteData = new RouteData(),
+            ActionDescriptor = new ActionDescriptor()
         };
 
         // Act & Assert
-        Assert.DoesNotThrow(() => {
+        Assert.DoesNotThrow(() =>
+        {
             var responseType = typeof(Response);
             var constructor = responseType.GetConstructor(
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+                BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                new[] { typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string), typeof(IInertiaSerializer) },
+                new[]
+                {
+                    typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string),
+                    typeof(IInertiaSerializer)
+                },
                 null);
-            var testResponse = (Response)constructor!.Invoke(new object[] { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
+            var testResponse = (Response)constructor!.Invoke(new object[]
+                { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
             testResponse.SetContext(testActionContext);
         });
     }
@@ -171,14 +185,20 @@ public class UnitTestErrorBags
         _httpRequestMock.SetupGet(r => r.Headers).Returns(headers);
 
         // Act & Assert
-        Assert.DoesNotThrow(() => {
+        Assert.DoesNotThrow(() =>
+        {
             var responseType = typeof(Response);
             var constructor = responseType.GetConstructor(
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+                BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                new[] { typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string), typeof(IInertiaSerializer) },
+                new[]
+                {
+                    typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string),
+                    typeof(IInertiaSerializer)
+                },
                 null);
-            var testResponse = (Response)constructor!.Invoke(new object[] { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
+            var testResponse = (Response)constructor!.Invoke(new object[]
+                { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
             testResponse.SetContext(_actionContext);
         });
     }
@@ -203,14 +223,20 @@ public class UnitTestErrorBags
         _httpRequestMock.SetupGet(r => r.Headers).Returns(headers);
 
         // Act & Assert
-        Assert.DoesNotThrow(() => {
+        Assert.DoesNotThrow(() =>
+        {
             var responseType = typeof(Response);
             var constructor = responseType.GetConstructor(
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+                BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                new[] { typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string), typeof(IInertiaSerializer) },
+                new[]
+                {
+                    typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string),
+                    typeof(IInertiaSerializer)
+                },
                 null);
-            var testResponse = (Response)constructor!.Invoke(new object[] { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
+            var testResponse = (Response)constructor!.Invoke(new object[]
+                { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
             testResponse.SetContext(_actionContext);
         });
     }
@@ -238,14 +264,20 @@ public class UnitTestErrorBags
         _httpRequestMock.SetupGet(r => r.Headers).Returns(headers);
 
         // Act & Assert
-        Assert.DoesNotThrow(() => {
+        Assert.DoesNotThrow(() =>
+        {
             var responseType = typeof(Response);
             var constructor = responseType.GetConstructor(
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+                BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                new[] { typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string), typeof(IInertiaSerializer) },
+                new[]
+                {
+                    typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string),
+                    typeof(IInertiaSerializer)
+                },
                 null);
-            var testResponse = (Response)constructor!.Invoke(new object[] { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
+            var testResponse = (Response)constructor!.Invoke(new object[]
+                { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
             testResponse.SetContext(_actionContext);
         });
     }
@@ -263,13 +295,14 @@ public class UnitTestErrorBags
         var testActionContext = new ActionContext
         {
             HttpContext = _httpContextMock.Object,
-            RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-            ActionDescriptor = new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
+            RouteData = new RouteData(),
+            ActionDescriptor = new ActionDescriptor()
         };
 
         // Add model state errors manually using reflection since ModelState is get-only
         var modelStateProperty = typeof(ActionContext).GetProperty("ModelState");
-        var modelStateField = typeof(ActionContext).GetField("_modelState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var modelStateField =
+            typeof(ActionContext).GetField("_modelState", BindingFlags.NonPublic | BindingFlags.Instance);
 
         if (modelStateField != null)
         {
@@ -288,14 +321,20 @@ public class UnitTestErrorBags
         _httpRequestMock.SetupGet(r => r.Headers).Returns(headers);
 
         // Act & Assert
-        Assert.DoesNotThrow(() => {
+        Assert.DoesNotThrow(() =>
+        {
             var responseType = typeof(Response);
             var constructor = responseType.GetConstructor(
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+                BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                new[] { typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string), typeof(IInertiaSerializer) },
+                new[]
+                {
+                    typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string),
+                    typeof(IInertiaSerializer)
+                },
                 null);
-            var testResponse = (Response)constructor!.Invoke(new object[] { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
+            var testResponse = (Response)constructor!.Invoke(new object[]
+                { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
             testResponse.SetContext(testActionContext);
         });
     }
