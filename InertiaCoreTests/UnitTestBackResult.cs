@@ -139,6 +139,7 @@ public class UnitTestBackResult
             // Simulate the error storage logic from BackResult.ExecuteResultAsync
             if (_actionContext.ModelState.IsValid) return;
             var requestServices = _actionContext.HttpContext.RequestServices;
+            if (requestServices == null) return;
 
             var tempDataFactory = requestServices.GetRequiredService<ITempDataDictionaryFactory>();
             var tempData = tempDataFactory.GetTempData(_actionContext.HttpContext);
