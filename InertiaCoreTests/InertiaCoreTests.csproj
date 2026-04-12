@@ -18,6 +18,22 @@
         <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="19.2.16" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="7.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.0"/>
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\InertiaCore\InertiaCore.csproj"/>
     </ItemGroup>

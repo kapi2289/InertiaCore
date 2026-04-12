@@ -1,13 +1,13 @@
-using System.Net;
 using InertiaCore.Models;
 using InertiaCore.Ssr;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace InertiaCore.Extensions;
 
@@ -25,20 +25,52 @@ public static class Configure
             Inertia.Version(Vite.GetManifestHash);
         }
 
-        app.Use(async (context, next) =>
-        {
-            if (context.IsInertiaRequest()
-                && context.Request.Method == "GET"
-                && context.Request.Headers[InertiaHeader.Version] != Inertia.GetVersion())
-            {
-                await OnVersionChange(context, app);
-                return;
-            }
+        // Check if TempData services are available for error bag functionality
+        CheckTempDataAvailability(app);
 
-            await next();
-        });
+        app.UseMiddleware<Middleware>();
 
         return app;
+    }
+
+    private static void CheckTempDataAvailability(IApplicationBuilder app)
+    {
+        // Skip warning in test environments
+        var environment = app.ApplicationServices.GetService<IWebHostEnvironment>();
+        if (environment?.EnvironmentName == "Test" ||
+            (environment?.EnvironmentName != "Development" && IsTestEnvironment()))
+        {
+            return;
+        }
+
+        try
+        {
+            var tempDataFactory = app.ApplicationServices.GetService<ITempDataDictionaryFactory>();
+            if (tempDataFactory == null)
+            {
+                var logger = app.ApplicationServices.GetService<ILogger<IApplicationBuilder>>();
+                logger?.LogWarning("TempData services are not configured. Error bag functionality will be limited. " +
+                                   "Consider adding services.AddSession() and app.UseSession() to enable full error bag support.");
+            }
+        }
+        catch (Exception)
+        {
+            // If we can't check for TempData services, that's also a sign they might not be configured
+            var logger = app.ApplicationServices.GetService<ILogger<IApplicationBuilder>>();
+            logger?.LogWarning("Unable to verify TempData configuration. Error bag functionality may be limited. " +
+                               "Ensure services.AddSession() and app.UseSession() are configured for full error bag support.");
+        }
+    }
+
+    private static bool IsTestEnvironment()
+    {
+        // Check if we're running in a test context by looking for common test assemblies
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        return assemblies.Any(a =>
+            a.FullName?.Contains("nunit", StringComparison.OrdinalIgnoreCase) == true ||
+            a.FullName?.Contains("xunit", StringComparison.OrdinalIgnoreCase) == true ||
+            a.FullName?.Contains("mstest", StringComparison.OrdinalIgnoreCase) == true ||
+            a.FullName?.Contains("testhost", StringComparison.OrdinalIgnoreCase) == true);
     }
 
     public static IServiceCollection AddInertia(this IServiceCollection services,
@@ -75,18 +107,5 @@ public static class Configure
         if (options != null) services.Configure(options);
 
         return services;
-    }
-
-    private static async Task OnVersionChange(HttpContext context, IApplicationBuilder app)
-    {
-        var tempData = app.ApplicationServices.GetRequiredService<ITempDataDictionaryFactory>()
-            .GetTempData(context);
-
-        if (tempData.Any()) tempData.Keep();
-
-        context.Response.Headers.Override(InertiaHeader.Location, context.RequestedUri());
-        context.Response.StatusCode = (int)HttpStatusCode.Conflict;
-
-        await context.Response.CompleteAsync();
     }
 }

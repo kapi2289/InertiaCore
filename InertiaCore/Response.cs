@@ -1,3 +1,4 @@
+using System.Text.Json;
 using InertiaCore.Extensions;
 using InertiaCore.Models;
 using InertiaCore.Props;
@@ -5,6 +6,7 @@ using InertiaCore.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InertiaCore;
 
@@ -43,7 +45,7 @@ public class Response : IActionResult
             Props = props
         };
 
-        page.Props["errors"] = GetErrors();
+        page.Props["errors"] = ResolveValidationErrors();
 
         SetPage(page);
     }
@@ -194,12 +196,139 @@ public class Response : IActionResult
 
     private Dictionary<string, string> GetErrors()
     {
+        var errors = new Dictionary<string, string>();
+
+        // First check current ModelState
+        if (!_context!.ModelState.IsValid)
+        {
+            foreach (var kvp in _context!.ModelState)
+            {
+                var error = kvp.Value?.Errors.FirstOrDefault()?.ErrorMessage;
+                if (!string.IsNullOrEmpty(error))
+                {
+                    errors[kvp.Key.ToCamelCase()] = error;
+                }
+            }
+        }
+
+        // Then check TempData for stored validation errors
+        var requestServices = _context!.HttpContext.RequestServices;
+
+        var tempDataFactory = requestServices.GetService<ITempDataDictionaryFactory>();
+        if (tempDataFactory == null) return errors;
+
+        var tempData = tempDataFactory.GetTempData(_context!.HttpContext);
+        var storedErrors = tempData.GetAndClearValidationErrors(_context!.HttpContext.Request);
+
+        // Merge stored errors with current errors, converting keys to camelCase
+        foreach (var kvp in storedErrors)
+        {
+            errors[kvp.Key.ToCamelCase()] = kvp.Value;
+        }
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Resolves and prepares validation errors in such a way that they are easier to use client-side.
+    /// Handles error bags from TempData and formats them according to Inertia specifications.
+    /// Matches Laravel's error bag resolution logic.
+    /// </summary>
+    private object ResolveValidationErrors()
+    {
+        var tempData = _context!.HttpContext.GetTempData();
+
+        // Check if there are any validation errors in TempData
+        if (tempData == null || !tempData.ContainsKey("__ValidationErrors"))
+        {
+            // Fall back to current ModelState errors
+            var modelStateErrors = GetCurrentModelStateErrors();
+            if (modelStateErrors.Count == 0)
+            {
+                return new Dictionary<string, string>(0);
+            }
+
+            // Check for error bag header
+            var errorBagHeader = _context.HttpContext.Request.Headers[InertiaHeader.ErrorBag].ToString();
+            if (!string.IsNullOrEmpty(errorBagHeader))
+            {
+                return new Dictionary<string, object> { [errorBagHeader] = modelStateErrors };
+            }
+
+            return modelStateErrors;
+        }
+
+        // Deserialize error bags from TempData
+        Dictionary<string, Dictionary<string, string>> errorBags;
+        if (tempData["__ValidationErrors"] is string jsonString && !string.IsNullOrEmpty(jsonString))
+        {
+            try
+            {
+                errorBags = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonString) ??
+                            new Dictionary<string, Dictionary<string, string>>();
+            }
+            catch (JsonException)
+            {
+                return new Dictionary<string, string>(0);
+            }
+        }
+        else
+        {
+            return new Dictionary<string, string>(0);
+        }
+
+        if (errorBags.Count == 0)
+        {
+            return new Dictionary<string, string>(0);
+        }
+
+        // Clear the temp data after reading (one-time use)
+        tempData.Remove("__ValidationErrors");
+
+        // Convert to camelCase for client-side consistency
+        var processedBags = errorBags.ToDictionary(
+            bag => bag.Key,
+            bag => bag.Value.ToDictionary(
+                error => error.Key.ToCamelCase(),
+                error => error.Value
+            )
+        );
+
+        var requestedErrorBag = _context.HttpContext.Request.Headers[InertiaHeader.ErrorBag].ToString();
+
+        // Laravel's logic: If there's only default bag AND a specific bag is requested
+        if (processedBags.ContainsKey("default") && !string.IsNullOrEmpty(requestedErrorBag))
+        {
+            return new Dictionary<string, object> { [requestedErrorBag] = processedBags["default"] };
+        }
+
+        // Laravel's logic: If a default bag exists, return its contents directly
+        // (mirrors Laravel's Middleware::resolveValidationErrors pipe)
+        if (processedBags.ContainsKey("default"))
+        {
+            return processedBags["default"];
+        }
+
+        // Laravel's logic: Return all bags
+        return processedBags.ToDictionary(
+            bag => bag.Key,
+            bag => (object)bag.Value
+        );
+    }
+
+    /// <summary>
+    /// Get only current ModelState errors (not TempData)
+    /// Matches the original GetErrors() logic exactly
+    /// </summary>
+    private Dictionary<string, string> GetCurrentModelStateErrors()
+    {
         if (!_context!.ModelState.IsValid)
             return _context!.ModelState.ToDictionary(o => o.Key.ToCamelCase(),
                 o => o.Value?.Errors.FirstOrDefault()?.ErrorMessage ?? "");
 
         return new Dictionary<string, string>(0);
     }
+
 
     protected internal void SetContext(ActionContext context) => _context = context;
 
