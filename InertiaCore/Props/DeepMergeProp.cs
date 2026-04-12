@@ -7,6 +7,9 @@ public class DeepMergeProp : InvokableProp, Mergeable
     public bool merge { get; set; } = true;
     public string[]? matchOn { get; set; }
     public bool deepMerge { get; set; } = true;
+    public bool Append { get; set; } = true;
+    public List<string> AppendsAtPaths { get; } = new();
+    public List<string> PrependsAtPaths { get; } = new();
 
     public DeepMergeProp(object? value) : base(value)
     {

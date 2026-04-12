@@ -271,10 +271,11 @@ public partial class Tests
 
         Assert.That(page?.DeepMergeProps, Is.EqualTo(new List<string> { "testDeepMerge1", "testDeepMerge2" }));
         // Deep merge props should also appear in match props on since they inherit from Mergeable
-        Assert.That(page?.MatchPropsOn, Is.EqualTo(new Dictionary<string, string[]>
+        Assert.That(page?.MatchPropsOn, Is.EqualTo(new List<string>
         {
-            { "testDeepMerge1", new[] { "deep" } },
-            { "testDeepMerge2", new[] { "shallow", "replace" } }
+            "testDeepMerge1.deep",
+            "testDeepMerge2.shallow",
+            "testDeepMerge2.replace"
         }));
     }
 
@@ -306,7 +307,7 @@ public partial class Tests
             { "errors", new Dictionary<string, string>(0) }
         }));
 
-        Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { "testMerge", "testDeepMerge" }));
+        Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { "testMerge" }));
         Assert.That(page?.DeepMergeProps, Is.EqualTo(new List<string> { "testDeepMerge" }));
     }
 }

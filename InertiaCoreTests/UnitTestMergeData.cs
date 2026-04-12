@@ -348,10 +348,11 @@ public partial class Tests
         }));
 
         Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { "testMerge1", "testMerge2" }));
-        Assert.That(page?.MatchPropsOn, Is.EqualTo(new Dictionary<string, string[]>
+        Assert.That(page?.MatchPropsOn, Is.EqualTo(new List<string>
         {
-            { "testMerge1", new[] { "deep" } },
-            { "testMerge2", new[] { "shallow", "replace" } }
+            "testMerge1.deep",
+            "testMerge2.shallow",
+            "testMerge2.replace"
         }));
     }
 
@@ -387,10 +388,10 @@ public partial class Tests
         }));
 
         Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { "testMerge1", "testMerge3" }));
-        Assert.That(page?.MatchPropsOn, Is.EqualTo(new Dictionary<string, string[]>
+        Assert.That(page?.MatchPropsOn, Is.EqualTo(new List<string>
         {
-            { "testMerge1", new[] { "deep" } },
-            { "testMerge3", new[] { "custom" } }
+            "testMerge1.deep",
+            "testMerge3.custom"
         }));
     }
 
@@ -428,9 +429,10 @@ public partial class Tests
         }));
 
         Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { "testMerge2" }));
-        Assert.That(page?.MatchPropsOn, Is.EqualTo(new Dictionary<string, string[]>
+        Assert.That(page?.MatchPropsOn, Is.EqualTo(new List<string>
         {
-            { "testMerge2", new[] { "shallow", "replace" } }
+            "testMerge2.shallow",
+            "testMerge2.replace"
         }));
     }
 
@@ -462,6 +464,33 @@ public partial class Tests
 
         Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { "testMerge" }));
         Assert.That(page?.MatchPropsOn, Is.EqualTo(null));
+    }
+
+    [Test]
+    [Description("Test if merge props honor the X-Inertia-Reset header.")]
+    public async Task TestMergePropsWithResetHeader()
+    {
+        var response = _factory.Render("Test/Page", new
+        {
+            TestMerge1 = _factory.Merge(() => "Merge1"),
+            TestMerge2 = _factory.Merge(() => "Merge2"),
+        });
+
+        var headers = new HeaderDictionary
+        {
+            { "X-Inertia-Reset", "testMerge1" },
+            { "X-Inertia-Partial-Component", "Test/Page" }
+        };
+
+        var context = PrepareContext(headers);
+
+        response.SetContext(context);
+        await response.ProcessResponse();
+
+        var page = response.GetJson().Value as Page;
+
+        // testMerge1 should NOT appear in mergeProps because it's in the reset list
+        Assert.That(page?.MergeProps, Is.EqualTo(new List<string> { "testMerge2" }));
     }
 
 }
