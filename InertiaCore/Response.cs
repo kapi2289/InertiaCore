@@ -47,6 +47,11 @@ public class Response : IActionResult
             ClearHistory = _clearHistory,
         };
 
+        var mergeable = GetMergeablePropsForRequest();
+        page.MergeProps = ResolveMergeProps(mergeable);
+        page.PrependProps = ResolvePrependProps(mergeable);
+        page.DeepMergeProps = ResolveDeepMergeProps(mergeable);
+        page.MatchPropsOn = ResolveMatchPropsOn(mergeable);
         page.Props["errors"] = GetErrors();
 
         SetPage(page);
@@ -88,7 +93,7 @@ public class Response : IActionResult
 
         if (!isPartial)
             return props
-                .Where(kv => kv.Value is not LazyProp)
+                .Where(kv => kv.Value is not IIgnoresFirstLoad)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
         props = props.ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -142,6 +147,162 @@ public class Response : IActionResult
         return props
             .Where(kv => kv.Value is not AlwaysProp)
             .Concat(alwaysProps).ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    /// <summary>
+    /// Get the props eligible for merging on this request.
+    /// Mirrors Laravel's Response::getMergePropsForRequest():
+    /// filters _props to only Mergeable && ShouldMerge(), removes any keys
+    /// listed in the X-Inertia-Reset header, then applies Partial-Only /
+    /// Partial-Except filtering.
+    /// </summary>
+    private Dictionary<string, object?> GetMergeablePropsForRequest(bool rejectResetProps = true)
+    {
+        var headers = _context!.HttpContext.Request.Headers;
+
+        var resetKeys = rejectResetProps
+            ? ParseHeaderList(headers[InertiaHeader.Reset].ToString())
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var hasPartialOnly = headers.ContainsKey(InertiaHeader.PartialOnly);
+        var onlyKeys = hasPartialOnly
+            ? ParseHeaderList(headers[InertiaHeader.PartialOnly].ToString())
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var exceptKeys = ParseHeaderList(headers[InertiaHeader.PartialExcept].ToString());
+
+        var result = new Dictionary<string, object?>();
+        foreach (var kv in _props)
+        {
+            if (kv.Value is not Mergeable m || !m.ShouldMerge()) continue;
+
+            var camel = kv.Key.ToCamelCase();
+
+            if (resetKeys.Contains(camel)) continue;
+            if (hasPartialOnly && !onlyKeys.Contains(camel)) continue;
+            if (exceptKeys.Contains(camel)) continue;
+
+            result[kv.Key] = kv.Value;
+        }
+
+        return result;
+    }
+
+    private static HashSet<string> ParseHeaderList(string? value)
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(value)) return set;
+
+        foreach (var part in value!.Split(','))
+        {
+            var trimmed = part.Trim();
+            if (trimmed.Length > 0) set.Add(trimmed);
+        }
+        return set;
+    }
+
+    /// <summary>
+    /// Resolve merge props that should be appended (excludes deep merge and prepend props).
+    /// Returns a flat list of prop keys or key.path entries.
+    /// </summary>
+    private static List<string>? ResolveMergeProps(Dictionary<string, object?> mergeProps)
+    {
+        var mergeableProps = mergeProps
+            .Where(kv => kv.Value is Mergeable m && !m.ShouldDeepMerge())
+            .ToList();
+
+        if (mergeableProps.Count == 0) return null;
+
+        var result = new List<string>();
+
+        foreach (var kv in mergeableProps)
+        {
+            var m = (Mergeable)kv.Value!;
+            var key = kv.Key.ToCamelCase();
+
+            if (m.AppendsAtRoot())
+            {
+                result.Add(key);
+            }
+
+            foreach (var path in m.AppendsAtPaths)
+            {
+                result.Add($"{key}.{path}");
+            }
+        }
+
+        return result.Count > 0 ? result : null;
+    }
+
+    /// <summary>
+    /// Resolve props that should be prepended during merging.
+    /// Returns a flat list of prop keys or key.path entries.
+    /// </summary>
+    private static List<string>? ResolvePrependProps(Dictionary<string, object?> mergeProps)
+    {
+        var mergeableProps = mergeProps
+            .Where(kv => kv.Value is Mergeable m && !m.ShouldDeepMerge())
+            .ToList();
+
+        if (mergeableProps.Count == 0) return null;
+
+        var result = new List<string>();
+
+        foreach (var kv in mergeableProps)
+        {
+            var m = (Mergeable)kv.Value!;
+            var key = kv.Key.ToCamelCase();
+
+            if (m.PrependsAtRoot())
+            {
+                result.Add(key);
+            }
+
+            foreach (var path in m.PrependsAtPaths)
+            {
+                result.Add($"{key}.{path}");
+            }
+        }
+
+        return result.Count > 0 ? result : null;
+    }
+
+    /// <summary>
+    /// Resolve props that should be deep merged.
+    /// </summary>
+    private static List<string>? ResolveDeepMergeProps(Dictionary<string, object?> mergeProps)
+    {
+        var deepMergeProps = mergeProps
+            .Where(kv => kv.Value is Mergeable m && m.ShouldDeepMerge())
+            .Select(kv => kv.Key.ToCamelCase())
+            .ToList();
+
+        return deepMergeProps.Count > 0 ? deepMergeProps : null;
+    }
+
+    /// <summary>
+    /// Resolve the match-on keys for merge props as a flat list.
+    /// Returns entries like "propKey.strategy" matching Laravel's format.
+    /// </summary>
+    private static List<string>? ResolveMatchPropsOn(Dictionary<string, object?> mergeProps)
+    {
+        var result = new List<string>();
+
+        foreach (var kv in mergeProps)
+        {
+            if (kv.Value is not Mergeable m) continue;
+
+            var matchOnKeys = m.GetMatchOn();
+            if (matchOnKeys == null || matchOnKeys.Length == 0) continue;
+
+            var key = kv.Key.ToCamelCase();
+            foreach (var matchOnItem in matchOnKeys)
+            {
+                result.Add($"{key}.{matchOnItem}");
+            }
+        }
+
+        return result.Count > 0 ? result : null;
     }
 
     /// <summary>

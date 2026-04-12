@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace InertiaCore.Models;
 
 internal class Page
@@ -8,4 +10,16 @@ internal class Page
     public string Url { get; set; } = default!;
     public bool EncryptHistory { get; set; } = false;
     public bool ClearHistory { get; set; } = false;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? MergeProps { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? MatchPropsOn { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? PrependProps { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? DeepMergeProps { get; set; }
 }
