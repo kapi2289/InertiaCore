@@ -45,6 +45,16 @@ internal class Gateway : IGateway
 
     private bool BundleExists()
     {
+        var overridePath = _options.Value.SsrBundlePath;
+        if (!string.IsNullOrEmpty(overridePath))
+        {
+            var resolvedOverride = ResolvePath(overridePath);
+            if (!string.IsNullOrEmpty(resolvedOverride) && File.Exists(resolvedOverride))
+            {
+                return true;
+            }
+        }
+
         var commonBundlePaths = new[]
         {
             "~/public/js/ssr.js",
