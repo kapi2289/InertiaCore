@@ -302,8 +302,9 @@ public class Response : IActionResult
             return new Dictionary<string, object> { [requestedErrorBag] = processedBags["default"] };
         }
 
-        // Laravel's logic: If there's only default bag, return its contents directly
-        if (processedBags.ContainsKey("default") && processedBags.Count == 1)
+        // Laravel's logic: If a default bag exists, return its contents directly
+        // (mirrors Laravel's Middleware::resolveValidationErrors pipe)
+        if (processedBags.ContainsKey("default"))
         {
             return processedBags["default"];
         }

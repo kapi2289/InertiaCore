@@ -522,6 +522,34 @@ public class UnitTestErrorBags
     }
 
     [Test]
+    [Description(
+        "Laravel parity: with multiple TempData bags that include a default bag and no header, " +
+        "the default bag's errors are returned unwrapped (flat). Mirrors Laravel's " +
+        "Middleware::resolveValidationErrors pipe which returns the default bag unconditionally when present."
+    )]
+    public async Task ResolveValidationErrors_MultipleBagsIncludingDefault_NoHeader_ReturnsDefaultOnly()
+    {
+        var bags = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["default"] = new() { ["email"] = "Email required" },
+            ["login"] = new() { ["email"] = "Login email required" }
+        };
+
+        var errors = await ResolveErrorsProp(errorBags: bags, errorBagHeader: null, modelStateErrors: null);
+
+        // Must be flat (default bag unwrapped), not nested under bag names.
+        Assert.That(errors, Is.InstanceOf<Dictionary<string, string>>(),
+            "Errors prop must be unwrapped to the default bag's flat dictionary, not a nested bag structure.");
+        var dict = (Dictionary<string, string>)errors!;
+        Assert.That(dict, Is.EqualTo(new Dictionary<string, string>
+        {
+            ["email"] = "Email required"
+        }), "Must be the default bag's errors, not the login bag's errors.");
+        Assert.That(dict.ContainsKey("default"), Is.False, "Must not be nested under 'default'.");
+        Assert.That(dict.ContainsKey("login"), Is.False, "Must not include the 'login' bag.");
+    }
+
+    [Test]
     public void ResolveValidationErrors_FallbackToModelState_WithErrorBag()
     {
         // Arrange
