@@ -2,8 +2,10 @@ using System.Reflection;
 using System.Text.Json;
 using InertiaCore;
 using InertiaCore.Extensions;
+using InertiaCore.Models;
 using InertiaCore.Utils;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -280,6 +282,243 @@ public class UnitTestErrorBags
                 { "TestComponent", new Dictionary<string, object?>(), "app", null!, _serializerMock.Object });
             testResponse.SetContext(_actionContext);
         });
+    }
+
+    /// <summary>
+    /// Builds a Response + ActionContext pair that actually wires up an in-memory
+    /// TempData backing store and real request services, so ProcessResponse() can
+    /// be invoked end-to-end and the resolved errors prop inspected. This is what
+    /// the regression tests below use to assert the exact shape of the errors prop.
+    /// </summary>
+    private static (Response response, ActionContext context) BuildResolveFixture(
+        Dictionary<string, Dictionary<string, string>>? errorBags,
+        string? errorBagHeader,
+        Dictionary<string, string>? modelStateErrors)
+    {
+        var tempDataBacking = new Dictionary<string, object?>();
+        if (errorBags != null)
+        {
+            tempDataBacking["__ValidationErrors"] = JsonSerializer.Serialize(errorBags);
+        }
+
+        var tempDataMock = new Mock<ITempDataDictionary>();
+        tempDataMock.Setup(t => t.ContainsKey(It.IsAny<string>()))
+            .Returns<string>(k => tempDataBacking.ContainsKey(k));
+        tempDataMock.Setup(t => t[It.IsAny<string>()])
+            .Returns<string>(k => tempDataBacking.TryGetValue(k, out var v) ? v : null);
+        tempDataMock.Setup(t => t.Remove(It.IsAny<string>()))
+            .Returns<string>(k => tempDataBacking.Remove(k));
+
+        var tempDataFactory = new Mock<ITempDataDictionaryFactory>();
+        tempDataFactory.Setup(f => f.GetTempData(It.IsAny<HttpContext>()))
+            .Returns(tempDataMock.Object);
+
+        var services = new Mock<IServiceProvider>();
+        services.Setup(s => s.GetService(typeof(ITempDataDictionaryFactory)))
+            .Returns(tempDataFactory.Object);
+
+        var headers = new HeaderDictionary();
+        if (!string.IsNullOrEmpty(errorBagHeader))
+        {
+            headers[InertiaHeader.ErrorBag] = errorBagHeader;
+        }
+
+        var request = new Mock<HttpRequest>();
+        request.SetupGet(r => r.Headers).Returns(headers);
+        request.SetupGet(r => r.Path).Returns(new PathString("/"));
+        request.SetupGet(r => r.QueryString).Returns(QueryString.Empty);
+        request.SetupGet(r => r.Scheme).Returns("http");
+        request.SetupGet(r => r.Host).Returns(new HostString("localhost"));
+        request.SetupGet(r => r.PathBase).Returns(PathString.Empty);
+
+        var responseHeaders = new HeaderDictionary();
+        var httpResponse = new Mock<HttpResponse>();
+        httpResponse.SetupGet(r => r.Headers).Returns(responseHeaders);
+
+        var httpContext = new Mock<HttpContext>();
+        httpContext.SetupGet(c => c.Request).Returns(request.Object);
+        httpContext.SetupGet(c => c.Response).Returns(httpResponse.Object);
+        httpContext.SetupGet(c => c.Features).Returns(new FeatureCollection());
+        httpContext.SetupGet(c => c.RequestServices).Returns(services.Object);
+
+        var context = new ActionContext(httpContext.Object, new RouteData(), new ActionDescriptor());
+        if (modelStateErrors != null)
+        {
+            foreach (var kvp in modelStateErrors)
+                context.ModelState.AddModelError(kvp.Key, kvp.Value);
+        }
+
+        var serializer = new Mock<IInertiaSerializer>();
+        var ctor = typeof(Response).GetConstructor(
+            BindingFlags.NonPublic | BindingFlags.Instance,
+            null,
+            new[]
+            {
+                typeof(string), typeof(Dictionary<string, object?>), typeof(string), typeof(string),
+                typeof(IInertiaSerializer)
+            },
+            null);
+        var response = (Response)ctor!.Invoke(new object[]
+            { "TestComponent", new Dictionary<string, object?>(), "app", null!, serializer.Object });
+        response.SetContext(context);
+        return (response, context);
+    }
+
+    private static async Task<object?> ResolveErrorsProp(
+        Dictionary<string, Dictionary<string, string>>? errorBags,
+        string? errorBagHeader,
+        Dictionary<string, string>? modelStateErrors)
+    {
+        var (response, _) = BuildResolveFixture(errorBags, errorBagHeader, modelStateErrors);
+        await response.ProcessResponse();
+        var pageField = typeof(Response).GetField("_page", BindingFlags.NonPublic | BindingFlags.Instance);
+        var page = (Page)pageField!.GetValue(response)!;
+        return page.Props["errors"];
+    }
+
+    [Test]
+    [Description(
+        "Laravel parity: with no TempData bags and no ModelState errors, errors prop is an empty dictionary."
+    )]
+    public async Task ResolveValidationErrors_NoErrorsAnywhere_ReturnsEmptyDictionary()
+    {
+        var errors = await ResolveErrorsProp(errorBags: null, errorBagHeader: null, modelStateErrors: null);
+
+        Assert.That(errors, Is.InstanceOf<Dictionary<string, string>>());
+        Assert.That((Dictionary<string, string>)errors!, Is.Empty);
+    }
+
+    [Test]
+    [Description(
+        "Laravel parity: with no TempData bags but ModelState errors and no header, errors prop is the flat ModelState dict with camelCased keys."
+    )]
+    public async Task ResolveValidationErrors_ModelStateOnly_NoHeader_ReturnsFlatDictionary()
+    {
+        var errors = await ResolveErrorsProp(
+            errorBags: null,
+            errorBagHeader: null,
+            modelStateErrors: new Dictionary<string, string> { ["Email"] = "Email is required" });
+
+        Assert.That(errors, Is.EqualTo(new Dictionary<string, string>
+        {
+            ["email"] = "Email is required"
+        }));
+    }
+
+    [Test]
+    [Description(
+        "Laravel parity: with no TempData bags, ModelState errors, and an error-bag header, the ModelState errors are wrapped under the requested bag name."
+    )]
+    public async Task ResolveValidationErrors_ModelStateOnly_WithHeader_WrapsUnderNamedBag()
+    {
+        var errors = await ResolveErrorsProp(
+            errorBags: null,
+            errorBagHeader: "contact",
+            modelStateErrors: new Dictionary<string, string> { ["Email"] = "Email is required" });
+
+        Assert.That(errors, Is.InstanceOf<Dictionary<string, object>>());
+        var dict = (Dictionary<string, object>)errors!;
+        Assert.That(dict.Keys, Is.EquivalentTo(new[] { "contact" }));
+        Assert.That(dict["contact"], Is.EqualTo(new Dictionary<string, string>
+        {
+            ["email"] = "Email is required"
+        }));
+    }
+
+    [Test]
+    [Description(
+        "Laravel parity: with only a default bag in TempData and no header, the default bag's errors are returned unwrapped (flat)."
+    )]
+    public async Task ResolveValidationErrors_DefaultBagOnly_NoHeader_ReturnsUnwrapped()
+    {
+        var bags = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["default"] = new() { ["email"] = "Email is required" }
+        };
+
+        var errors = await ResolveErrorsProp(errorBags: bags, errorBagHeader: null, modelStateErrors: null);
+
+        Assert.That(errors, Is.EqualTo(new Dictionary<string, string>
+        {
+            ["email"] = "Email is required"
+        }));
+    }
+
+    [Test]
+    [Description(
+        "Laravel parity (the subtle case): with only a default bag in TempData AND X-Inertia-Error-Bag set, the default bag's errors get RE-LABELED under the requested bag name. Not flat, not under 'default'."
+    )]
+    public async Task ResolveValidationErrors_DefaultBag_WithHeader_RelabelsUnderRequestedBag()
+    {
+        var bags = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["default"] = new() { ["email"] = "Email is required" }
+        };
+
+        var errors = await ResolveErrorsProp(errorBags: bags, errorBagHeader: "login", modelStateErrors: null);
+
+        Assert.That(errors, Is.InstanceOf<Dictionary<string, object>>());
+        var dict = (Dictionary<string, object>)errors!;
+        Assert.That(dict.Keys, Is.EquivalentTo(new[] { "login" }),
+            "The default bag must be re-labeled as the requested bag name, not left as 'default'.");
+        Assert.That(dict["login"], Is.EqualTo(new Dictionary<string, string>
+        {
+            ["email"] = "Email is required"
+        }));
+    }
+
+    [Test]
+    [Description(
+        "Laravel parity: with multiple named bags in TempData (no default) and no header, all bags are returned as a nested structure."
+    )]
+    public async Task ResolveValidationErrors_MultipleNamedBags_NoHeader_ReturnsAllBags()
+    {
+        var bags = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["login"] = new() { ["email"] = "Login email is required" },
+            ["registration"] = new() { ["password"] = "Registration password is required" }
+        };
+
+        var errors = await ResolveErrorsProp(errorBags: bags, errorBagHeader: null, modelStateErrors: null);
+
+        Assert.That(errors, Is.InstanceOf<Dictionary<string, object>>());
+        var dict = (Dictionary<string, object>)errors!;
+        Assert.That(dict.Keys, Is.EquivalentTo(new[] { "login", "registration" }));
+        Assert.That(dict["login"], Is.EqualTo(new Dictionary<string, string>
+        {
+            ["email"] = "Login email is required"
+        }));
+        Assert.That(dict["registration"], Is.EqualTo(new Dictionary<string, string>
+        {
+            ["password"] = "Registration password is required"
+        }));
+    }
+
+    [Test]
+    [Description(
+        "Laravel parity: with multiple named bags (no default) and a header set, the header only matters when a default bag exists, so all bags are still returned unchanged."
+    )]
+    public async Task ResolveValidationErrors_MultipleNamedBags_WithHeader_ReturnsAllBagsUnchanged()
+    {
+        var bags = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["login"] = new() { ["email"] = "Login email is required" },
+            ["registration"] = new() { ["password"] = "Registration password is required" }
+        };
+
+        var errors = await ResolveErrorsProp(errorBags: bags, errorBagHeader: "login", modelStateErrors: null);
+
+        Assert.That(errors, Is.InstanceOf<Dictionary<string, object>>());
+        var dict = (Dictionary<string, object>)errors!;
+        Assert.That(dict.Keys, Is.EquivalentTo(new[] { "login", "registration" }));
+        Assert.That(dict["login"], Is.EqualTo(new Dictionary<string, string>
+        {
+            ["email"] = "Login email is required"
+        }));
+        Assert.That(dict["registration"], Is.EqualTo(new Dictionary<string, string>
+        {
+            ["password"] = "Registration password is required"
+        }));
     }
 
     [Test]
